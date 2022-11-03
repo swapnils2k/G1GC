@@ -12,8 +12,11 @@
  */
 package org.mmtk.plan.g1gc;
 
+
+import org.mmtk.plan.generational.Gen;
 import org.mmtk.plan.generational.GenMutator;
 import org.mmtk.policy.CopyLocal;
+import org.mmtk.policy.CopySpace;
 import org.mmtk.policy.Space;
 import org.mmtk.utility.Log;
 import org.mmtk.utility.alloc.Allocator;
@@ -52,7 +55,9 @@ public class G1Mutator extends GenMutator {
    * "pretenure" objects into this space otherwise used only by
    * the collector)
    */
-  private final CopyLocal mature;
+  private final CopyLocal mature0;
+  private final CopyLocal mature1;
+  private boolean flag = false;
 
   /****************************************************************************
    *
@@ -63,7 +68,8 @@ public class G1Mutator extends GenMutator {
    * Constructor
    */
   public G1Mutator() {
-    mature = new CopyLocal();
+    mature0 = new CopyLocal(G1.matureSpace0);
+    mature1 = new CopyLocal(G1.matureSpace1);
   }
 
   /**
@@ -73,7 +79,7 @@ public class G1Mutator extends GenMutator {
   @Override
   public void initMutator(int id) {
     super.initMutator(id);
-    mature.rebind(G1.toSpace());
+    // mature.rebind(G1.toSpace());
   }
 
   /****************************************************************************
@@ -87,11 +93,34 @@ public class G1Mutator extends GenMutator {
   @Override
   @Inline
   public final Address alloc(int bytes, int align, int offset, int allocator, int site) {
-    Log.writeln("G1 Allocation called");
-    if (allocator == G1.ALLOC_MATURE) {
-      return mature.alloc(bytes, align, offset);
+    // Log.writeln("G1 Allocation called");
+    Address returnVal = null;
+    // Log.write("Id = ");
+    // Log.writeln(this.getId());
+    // Log.write("Allocator = ");
+    // Log.write(allocator);
+    if (allocator == Gen.ALLOC_NURSERY) {
+      // Log.write("G1 Mature Allocator");
+      if (flag) {
+        flag = !flag;
+        Log.writeln("Allocating in mature0 ");
+        returnVal = mature0.alloc(bytes, align, offset);
+      } else {
+        flag = !flag;
+        Log.writeln("Allocating in mature1 ");
+        returnVal = mature1.alloc(bytes, align, offset);
+      }
     }
-    return super.alloc(bytes, align, offset, allocator, site);
+    if (returnVal != null) {
+      ObjectReference ref = returnVal.toObjectReference();
+      if (Space.isInSpace(G1.MS0, ref)) {
+        Log.writeln("In nursery");
+      }
+      return returnVal;
+    }
+    // Log.write("Super Calling");
+    returnVal = super.alloc(bytes, align, offset, allocator, site);
+    return returnVal;
   }
 
   @Override
@@ -103,11 +132,11 @@ public class G1Mutator extends GenMutator {
     super.postAlloc(object, typeRef, bytes, allocator);
   }
 
-  @Override
-  public final Allocator getAllocatorFromSpace(Space space) {
-    if (space == G1.matureSpace0 || space == G1.matureSpace1) return mature;
-    return super.getAllocatorFromSpace(space);
-  }
+  // @Override
+  // public final Allocator getAllocatorFromSpace(Space space) {
+  //   if (space == G1.matureSpace0 || space == G1.matureSpace1) return mature;
+  //   return super.getAllocatorFromSpace(space);
+  // }
 
 
   /*****************************************************************************
@@ -124,7 +153,7 @@ public class G1Mutator extends GenMutator {
     if (global().traceFullHeap()) {
       if (phaseId == G1.RELEASE) {
         super.collectionPhase(phaseId, primary);
-        if (global().gcFullHeap) mature.rebind(G1.toSpace());
+        // if (global().gcFullHeap) mature.rebind(G1.toSpace());
         return;
       }
     }
