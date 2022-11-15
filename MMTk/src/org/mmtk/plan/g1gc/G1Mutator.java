@@ -115,6 +115,8 @@ public class G1Mutator extends GenMutator {
       ObjectReference ref = returnVal.toObjectReference();
       if (Space.isInSpace(G1.MS0, ref)) {
         Log.writeln("In nursery");
+        Space.printVMMap();
+        Log.writeln(returnVal);
       }
       return returnVal;
     }
