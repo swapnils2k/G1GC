@@ -68,8 +68,8 @@ public class G1Mutator extends GenMutator {
    * Constructor
    */
   public G1Mutator() {
-    mature0 = new CopyLocal(G1.matureSpace0);
-    mature1 = new CopyLocal(G1.matureSpace1);
+    mature0 = new CopyLocal(G1Mature.matureSpace0);
+    mature1 = new CopyLocal(G1Mature.matureSpace1);
   }
 
   /**
@@ -113,7 +113,7 @@ public class G1Mutator extends GenMutator {
     }
     if (returnVal != null) {
       ObjectReference ref = returnVal.toObjectReference();
-      if (Space.isInSpace(G1.MS0, ref)) {
+      if (Space.isInSpace(G1Mature.MS0, ref)) {
         Log.writeln("In nursery");
         Space.printVMMap();
         Log.writeln(returnVal);
@@ -130,7 +130,7 @@ public class G1Mutator extends GenMutator {
   public final void postAlloc(ObjectReference object, ObjectReference typeRef,
       int bytes, int allocator) {
     // nothing to be done
-    if (allocator == G1.ALLOC_MATURE) return;
+    if (allocator == G1Mature.ALLOC_MATURE) return;
     super.postAlloc(object, typeRef, bytes, allocator);
   }
 
@@ -153,7 +153,7 @@ public class G1Mutator extends GenMutator {
   public void collectionPhase(short phaseId, boolean primary) {
     Log.writeln("GC Collection triggered.");
     if (global().traceFullHeap()) {
-      if (phaseId == G1.RELEASE) {
+      if (phaseId == G1Mature.RELEASE) {
         super.collectionPhase(phaseId, primary);
         // if (global().gcFullHeap) mature.rebind(G1.toSpace());
         return;
@@ -169,8 +169,8 @@ public class G1Mutator extends GenMutator {
    */
 
   /** @return The active global plan as a <code>G1</code> instance. */
-  private static G1 global() {
-    return (G1) VM.activePlan.global();
+  private static G1Mature global() {
+    return (G1Mature) VM.activePlan.global();
   }
 
 }

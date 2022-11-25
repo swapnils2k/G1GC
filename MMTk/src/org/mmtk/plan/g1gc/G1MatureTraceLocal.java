@@ -39,8 +39,8 @@ public final class G1MatureTraceLocal extends GenMatureTraceLocal {
     super(global, plan);
   }
 
-  private static G1 global() {
-    return (G1) VM.activePlan.global();
+  private static G1Mature global() {
+    return (G1Mature) VM.activePlan.global();
   }
 
   /**
@@ -58,20 +58,20 @@ public final class G1MatureTraceLocal extends GenMatureTraceLocal {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
     if (object.isNull()) return object;
 
-    if (Space.isInSpace(G1.MS0, object))
-      return G1.matureSpace0.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
-    if (Space.isInSpace(G1.MS1, object))
-      return G1.matureSpace1.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
+    if (Space.isInSpace(G1Mature.MS0, object))
+      return G1Mature.matureSpace0.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
+    if (Space.isInSpace(G1Mature.MS1, object))
+      return G1Mature.matureSpace1.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
     return super.traceObject(object);
   }
 
   @Override
   public boolean isLive(ObjectReference object) {
     if (object.isNull()) return false;
-    if (Space.isInSpace(G1.MS0, object))
-      return G1.hi ? G1.matureSpace0.isLive(object) : true;
-    if (Space.isInSpace(G1.MS1, object))
-      return G1.hi ? true : G1.matureSpace1.isLive(object);
+    if (Space.isInSpace(G1Mature.MS0, object))
+      return G1Mature.hi ? G1Mature.matureSpace0.isLive(object) : true;
+    if (Space.isInSpace(G1Mature.MS1, object))
+      return G1Mature.hi ? true : G1Mature.matureSpace1.isLive(object);
     return super.isLive(object);
   }
 
@@ -86,10 +86,10 @@ public final class G1MatureTraceLocal extends GenMatureTraceLocal {
    */
   @Override
   public boolean willNotMoveInCurrentCollection(ObjectReference object) {
-    if (Space.isInSpace(G1.toSpaceDesc(), object)) {
+    if (Space.isInSpace(G1Mature.toSpaceDesc(), object)) {
       return true;
     }
-    if (Space.isInSpace(G1.fromSpaceDesc(), object)) {
+    if (Space.isInSpace(G1Mature.fromSpaceDesc(), object)) {
       return false;
     }
     return super.willNotMoveInCurrentCollection(object);

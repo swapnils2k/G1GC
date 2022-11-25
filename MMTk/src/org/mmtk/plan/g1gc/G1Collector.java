@@ -35,7 +35,7 @@ import org.vmmagic.pragma.*;
  * allocation into the mature space), and the mature space per-collector thread
  * collection time semantics are defined.<p>
  *
- * @see G1 for a description of the <code>G1</code> algorithm.
+ * @see G1Mature for a description of the <code>G1</code> algorithm.
  *
  * @see GenCopy
  * @see GenCopyMutator
@@ -65,7 +65,7 @@ public class G1Collector extends GenCollector {
    * Constructor
    */
   public G1Collector() {
-    mature = new CopyLocal(G1.toSpace());
+    mature = new CopyLocal(G1Mature.toSpace());
     matureTrace = new G1MatureTraceLocal(global().matureTrace, this);
   }
 
@@ -87,8 +87,8 @@ public class G1Collector extends GenCollector {
     } else {
       if (VM.VERIFY_ASSERTIONS) {
         VM.assertions._assert(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
-        VM.assertions._assert(allocator == G1.ALLOC_MATURE_MINORGC ||
-            allocator == G1.ALLOC_MATURE_MAJORGC);
+        VM.assertions._assert(allocator == G1Mature.ALLOC_MATURE_MINORGC ||
+            allocator == G1Mature.ALLOC_MATURE_MAJORGC);
       }
       return mature.alloc(bytes, align, offset);
     }
@@ -106,8 +106,8 @@ public class G1Collector extends GenCollector {
     ForwardingWord.clearForwardingBits(object);
     if (allocator == Plan.ALLOC_LOS)
       Plan.loSpace.initializeHeader(object, false);
-    else if (G1.IGNORE_REMSETS)
-      G1.immortalSpace.traceObject(getCurrentTrace(), object); // FIXME this does not look right
+    else if (G1Mature.IGNORE_REMSETS)
+      G1Mature.immortalSpace.traceObject(getCurrentTrace(), object); // FIXME this does not look right
     if (Gen.USE_OBJECT_BARRIER)
       HeaderByte.markAsUnlogged(object);
   }
@@ -124,15 +124,15 @@ public class G1Collector extends GenCollector {
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
     if (global().traceFullHeap()) {
-      if (phaseId == G1.PREPARE) {
+      if (phaseId == G1Mature.PREPARE) {
         super.collectionPhase(phaseId, primary);
-        if (global().gcFullHeap) mature.rebind(G1.toSpace());
+        if (global().gcFullHeap) mature.rebind(G1Mature.toSpace());
       }
-      if (phaseId == G1.CLOSURE) {
+      if (phaseId == G1Mature.CLOSURE) {
         matureTrace.completeTrace();
         return;
       }
-      if (phaseId == G1.RELEASE) {
+      if (phaseId == G1Mature.RELEASE) {
         matureTrace.release();
         super.collectionPhase(phaseId, primary);
         return;
@@ -147,8 +147,8 @@ public class G1Collector extends GenCollector {
    */
 
   /** @return The active global plan as a <code>G1</code> instance. */
-  private static G1 global() {
-    return (G1) VM.activePlan.global();
+  private static G1Mature global() {
+    return (G1Mature) VM.activePlan.global();
   }
 
   /** Show the status of the mature allocator. */
