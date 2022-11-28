@@ -10,7 +10,7 @@
  *  See the COPYRIGHT.txt file distributed with this work for information
  *  regarding copyright ownership.
  */
-package org.mmtk.plan.generational;
+package org.mmtk.plan.g1gc;
 
 import static org.mmtk.utility.Conversions.pagesToBytes;
 
@@ -31,85 +31,68 @@ import org.mmtk.vm.VM;
 import org.vmmagic.pragma.*;
 import org.vmmagic.unboxed.*;
 
-/**
- * This abstract class implements the core functionality of generic
- * two-generation copying collectors.  Nursery collections occur when
- * either the heap is full or the nursery is full.  The nursery size
- * is determined by an optional command line argument.  If undefined,
- * the nursery size is "infinite", so nursery collections only occur
- * when the heap is full (this is known as a flexible-sized nursery
- * collector).  Thus both fixed and flexible nursery sizes are
- * supported.  Full heap collections occur when the nursery size has
- * dropped to a statically defined threshold,
- * <code>NURSERY_THRESHOLD</code><p>
- *
- * See also Plan.java for general comments on local vs global plan
- * classes.
- */
 @Uninterruptible
-public abstract class G1Survivor extends G1Nursery {
+public class G1Survivor extends G1Nursery {
 
-  /* The nursery space is where all new objects are allocated by default */
-  public static final CopySpace survivorSpace = new CopySpace("survivor", false, vmRequest);
+  public static final int ALLOC_SURVIVOR    = StopTheWorld.ALLOCATORS + 1;
+  public static final int SCAN_SURVIVOR     = 1;
+
+
+  /* Space object definition */
+  public static final CopySpace survivorSpace = new CopySpace("survivor", false, VMRequest.discontiguous());
   public static final int SURVIVOR = survivorSpace.getDescriptor();
-  private static final Address SURVIVOR_START = survivorSpace.getStart();
+  public static final Address SURVIVOR_START = survivorSpace.getStart();
 
-  /*****************************************************************************
-   *
-   * Instance fields
-   */
-
-
-  /* The trace object */
   public final Trace survivorTrace = new Trace(metaDataSpace);
 
-  /**
-   * Remset pools
-   */
-
-  /**
-   *
-   */
-  public final SharedDeque s_modbufPool = new SharedDeque("s_modBufs",metaDataSpace, 1);
-  public final SharedDeque s_remsetPool = new SharedDeque("s_remSets",metaDataSpace, 1);
-  public final SharedDeque s_arrayRemsetPool = new SharedDeque("s_arrayRemSets",metaDataSpace, 2);
-
-
-  /*****************************************************************************
-   *
-   * Collection
-   */
+  public final SharedDeque s_modbufPool = new SharedDeque("modBufs",metaDataSpace, 1);
+  public final SharedDeque s_remsetPool = new SharedDeque("remSets",metaDataSpace, 1);
+  public final SharedDeque s_arrayRemsetPool = new SharedDeque("arrayRemSets",metaDataSpace, 2);
 
   @Override
   @NoInline
   public void collectionPhase(short phaseId) {
     if (phaseId == PREPARE) {
-      survivorSpace.prepare(true);
-      return super.collectionPhase(phaseId);
+      if(isCurrentGCSurvivor()) {
+        survivorSpace.prepare(true);
+        return;
+      }
+
+      if(traceFullHeap()) {
+        survivorSpace.prepare(true);
+        super.collectionPhase(phaseId);
+        s_remsetPool.clearDeque(1);
+        s_arrayRemsetPool.clearDeque(2);
+        return;
+      }
     }
 
-    if (phaseId == CLOSURE) {
-      if (gcSurvivor) {
-        survivorTrace.prepare();
-      }
+    if (phaseId == STACK_ROOTS) {
+      VM.scanning.notifyInitialThreadScanComplete(!traceFullHeap());
+      setGCStatus(GC_PROPER);
       return;
     }
 
-    if (phaseId == RELEASE) {
-      survivorSpace.release();
-      switchNurseryZeroingApproach(survivorSpace);
-      s_modbufPool.clearDeque(1);
-      s_remsetPool.clearDeque(1);
-      s_arrayRemsetPool.clearDeque(2);
-
-      if (gcSurvivor) {
-        survivorTrace.release();
-      } else {
-        super.collectionPhase(phaseId);
+    if (phaseId == CLOSURE) {
+      if(isCurrentGCSurvivor()) {
+        survivorTrace.prepare();
+        return;
       }
-     
-      gcSurvivor = false;
-      nextGCSurvivor = false;
+    }
+
+    if (phaseId == RELEASE) {
+      if(isCurrentGCSurvivor() || traceFullHeap()) {
+          survivorSpace.release();
+          s_modbufPool.clearDeque(1);
+          s_remsetPool.clearDeque(1);
+          s_arrayRemsetPool.clearDeque(2);
+          if(isCurrentGCSurvivor())
+            survivorTrace.release();
+
+          nextGCSurvivor = false;
+          gcSurvivor = false;
+      }
+      super.collectionPhase(phaseId);
       return;
     }
 
@@ -117,74 +100,48 @@ public abstract class G1Survivor extends G1Nursery {
   }
 
   @Override
-  // Need to write in survivor too 
-  public final boolean collectionRequired(boolean spaceFull, Space space) {
-    int availableSurvivorPages = Options.nurserySize.getMaxNursery() - survivorSpace.reservedPages();
-    if (availableSurvivorPages <= 0) {
-      nextGCSurvivor = true;
-      return true;
-    }
+  public boolean collectionRequired(boolean spaceFull, Space space) {
+      if(space == survivorSpace && spaceFull) {
+          nextGCSurvivor = true;
+          return true;
+      }
 
-    if (spaceFull && space == survivorSpace) {
-      nextGCSurvivor = true;
-      return true;
-    }
-
-    return super.collectionRequired(spaceFull, space);
+      return super.collectionRequired(spaceFull, space);
   }
 
-  /*****************************************************************************
-   *
-   * Correctness
-   */
-
-  /*****************************************************************************
-   *
-   * Accounting
-   */
-
-  /**
-   * {@inheritDoc}
-   * Simply add the nursery's contribution to that of
-   * the superclass.
-   */
   @Override
   public int getPagesUsed() {
     return (survivorSpace.reservedPages() + super.getPagesUsed());
   }
 
-  /**
-   * Return the number of pages available for allocation, <i>assuming
-   * all future allocation is to the nursery</i>.
-   *
-   * @return The number of pages available for allocation, <i>assuming
-   * all future allocation is to the nursery</i>.
-   */
-  @Override
-  public int getPagesAvail() {
-    return super.getPagesAvail() >> 1;
-  }
-
-  /**
-   * Return the number of pages reserved for collection.
-   */
   @Override
   public int getCollectionReserve() {
     return survivorSpace.reservedPages() + super.getCollectionReserve();
   }
+  
+  @Inline
+  static boolean inSurvivor(Address addr) {
+      return addr.GE(SURVIVOR_START);
+  }
 
+  @Inline
+  static boolean inSurvivor(ObjectReference obj) {
+    return inSurvivor(obj.toAddress());
+  }
+
+  @Override
+  public boolean willNeverMove(ObjectReference object) {
+    if (Space.isInSpace(SURVIVOR, object))
+      return false;
+
+    return super.willNeverMove(object);
+  }
 
   @Override
   @Interruptible
-  protected void registerSpecializedMethods() {
+  public void registerSpecializedMethods() {
     TransitiveClosure.registerSpecializedScan(SCAN_SURVIVOR, GenNurseryTraceLocal.class);
     super.registerSpecializedMethods();
   }
 
-  @Interruptible
-  @Override
-  public void fullyBooted() {
-    super.fullyBooted();
-    survivorSpace.setZeroingApproach(true, false);
-  }
 }
