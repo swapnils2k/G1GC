@@ -21,6 +21,16 @@ import org.mmtk.plan.TransitiveClosure;
 import org.mmtk.utility.heap.VMRequest;
 import org.mmtk.vm.VM;
 
+
+import org.mmtk.plan.*;
+import org.mmtk.utility.deque.*;
+import org.mmtk.utility.heap.layout.HeapLayout;
+import org.mmtk.utility.Log;
+import org.mmtk.utility.options.Options;
+import org.mmtk.utility.sanitychecker.SanityChecker;
+import org.mmtk.utility.statistics.*;
+
+
 import org.vmmagic.pragma.*;
 
 @Uninterruptible 
@@ -31,10 +41,12 @@ public class G1GC extends G1Survivor {
   static boolean hi = false;
 
   public static final CopySpace matureSpace0 = new CopySpace("matureSpace0", false, VMRequest.discontiguous());
-  static final int MS0 = matureSpace0.getDescriptor();
+  static static final int MS0 = matureSpace0.getDescriptor();
+  public static final Address MATURE0_START = matureSpace0.getStart();
 
   public static final CopySpace matureSpace1 = new CopySpace("matureSpace1", true, VMRequest.discontiguous());
   static final int MS1 = matureSpace1.getDescriptor();
+  public static final Address MATURE1_START = matureSpace1.getStart();
 
   final Trace matureTrace = new Trace(metaDataSpace);
 
@@ -91,6 +103,16 @@ public class G1GC extends G1Survivor {
       }
 
       return super.collectionRequired(spaceFull, space);
+  }
+
+  @Inline
+  static boolean inMature(Address addr) {
+      return addr.GE(MATURE0_START) || addr.GE(MATURE1_START);
+  }
+
+  @Inline
+  static boolean inMature(ObjectReference obj) {
+    return inSurvivor(obj.toAddress());
   }
 
 
