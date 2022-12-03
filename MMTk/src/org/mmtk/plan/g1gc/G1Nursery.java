@@ -46,11 +46,6 @@ public class G1Nursery extends StopTheWorld {
   /* The trace object */
   public final Trace nurseryTrace = new Trace(metaDataSpace);
 
-  /* Remember set */
-  public final SharedDeque modbufPool = new SharedDeque("modBufs",metaDataSpace, 1);
-  public final SharedDeque remsetPool = new SharedDeque("remSets",metaDataSpace, 1);
-  public final SharedDeque arrayRemsetPool = new SharedDeque("arrayRemSets",metaDataSpace, 2);
-
   public boolean nextGCNursery;
   public boolean nextGCSurvivor;
   public boolean nextGCFullHeap;
@@ -77,18 +72,10 @@ public class G1Nursery extends StopTheWorld {
       }
 
       if(traceFullHeap()) {
-        nurserySpace.prepare(true);
         super.collectionPhase(phaseId);
-        remsetPool.clearDeque(1);
-        arrayRemsetPool.clearDeque(2);
+        nurserySpace.prepare(true);
         return;
       }
-    }
-
-    if (phaseId == STACK_ROOTS) {
-      VM.scanning.notifyInitialThreadScanComplete(!traceFullHeap());
-      setGCStatus(GC_PROPER);
-      return;
     }
 
     if (phaseId == CLOSURE) {
@@ -99,18 +86,19 @@ public class G1Nursery extends StopTheWorld {
     }
 
     if (phaseId == RELEASE) {
-      if(isCurrentGCNursery() || traceFullHeap()) {
-          nurserySpace.release();
-          modbufPool.clearDeque(1);
-          remsetPool.clearDeque(1);
-          arrayRemsetPool.clearDeque(2);
-          if(isCurrentGCNursery())
-            nurseryTrace.release();
-
-          nextGCNursery = false;
-          gcNursery = false;
+      if(isCurrentGCNursery()) {
+        nurserySpace.release();
+        nurseryTrace.release();
       }
-      super.collectionPhase(phaseId);
+
+      if (traceFullHeap()) {
+        nurserySpace.release();
+        nurseryTrace.release();
+        super.collectionPhase(phaseId);
+      }
+
+      nextGCNursery = false;
+      gcNursery = false;
       return;
     }
 
@@ -161,17 +149,9 @@ public class G1Nursery extends StopTheWorld {
   }
 
   @Override
-  public boolean willNeverMove(ObjectReference object) {
-    if (Space.isInSpace(NURSERY, object))
-      return false;
-
-    return super.willNeverMove(object);
-  }
-
-  @Override
   @Interruptible
   public void registerSpecializedMethods() {
-    TransitiveClosure.registerSpecializedScan(SCAN_NURSERY, GenNurseryTraceLocal.class);
+    TransitiveClosure.registerSpecializedScan(SCAN_NURSERY, G1NurseryTraceLocal.class);
     super.registerSpecializedMethods();
   }
 }
