@@ -45,10 +45,6 @@ public class G1Survivor extends G1Nursery {
 
   public final Trace survivorTrace = new Trace(metaDataSpace);
 
-  public final SharedDeque s_modbufPool = new SharedDeque("modBufs",metaDataSpace, 1);
-  public final SharedDeque s_remsetPool = new SharedDeque("remSets",metaDataSpace, 1);
-  public final SharedDeque s_arrayRemsetPool = new SharedDeque("arrayRemSets",metaDataSpace, 2);
-
   @Override
   @NoInline
   public void collectionPhase(short phaseId) {
@@ -59,18 +55,10 @@ public class G1Survivor extends G1Nursery {
       }
 
       if(traceFullHeap()) {
-        survivorSpace.prepare(true);
         super.collectionPhase(phaseId);
-        s_remsetPool.clearDeque(1);
-        s_arrayRemsetPool.clearDeque(2);
+        survivorSpace.prepare(true);
         return;
       }
-    }
-
-    if (phaseId == STACK_ROOTS) {
-      VM.scanning.notifyInitialThreadScanComplete(!traceFullHeap());
-      setGCStatus(GC_PROPER);
-      return;
     }
 
     if (phaseId == CLOSURE) {
@@ -78,21 +66,27 @@ public class G1Survivor extends G1Nursery {
         survivorTrace.prepare();
         return;
       }
+
+      if(traceFullHeap()) {
+        survivorTrace.prepare();
+        return; 
+      }
     }
 
     if (phaseId == RELEASE) {
-      if(isCurrentGCSurvivor() || traceFullHeap()) {
+      if(isCurrentGCSurvivor()) {
           survivorSpace.release();
-          s_modbufPool.clearDeque(1);
-          s_remsetPool.clearDeque(1);
-          s_arrayRemsetPool.clearDeque(2);
-          if(isCurrentGCSurvivor())
-            survivorTrace.release();
-
-          nextGCSurvivor = false;
-          gcSurvivor = false;
+          survivorTrace.release();
       }
-      super.collectionPhase(phaseId);
+
+      if(traceFullHeap()) {
+          survivorSpace.release();
+          survivorTrace.release();
+          super.collectionPhase(phaseId);
+      }
+
+      nextGCSurvivor = false;
+      gcSurvivor = false;
       return;
     }
 
@@ -140,7 +134,7 @@ public class G1Survivor extends G1Nursery {
   @Override
   @Interruptible
   public void registerSpecializedMethods() {
-    TransitiveClosure.registerSpecializedScan(SCAN_SURVIVOR, GenNurseryTraceLocal.class);
+    TransitiveClosure.registerSpecializedScan(SCAN_SURVIVOR, G1SurvivorTraceLocal.class);
     super.registerSpecializedMethods();
   }
 
