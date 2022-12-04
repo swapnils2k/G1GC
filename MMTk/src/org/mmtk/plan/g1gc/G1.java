@@ -21,6 +21,8 @@ import org.mmtk.plan.TransitiveClosure;
 import org.mmtk.utility.heap.VMRequest;
 import org.mmtk.vm.VM;
 
+import org.vmmagic.unboxed.Address;
+import org.vmmagic.unboxed.ObjectReference;
 
 import org.mmtk.plan.*;
 import org.mmtk.utility.deque.*;
@@ -34,7 +36,7 @@ import org.mmtk.utility.statistics.*;
 import org.vmmagic.pragma.*;
 
 @Uninterruptible 
-public class G1GC extends G1Survivor {
+public class G1 extends G1Survivor {
 
   public static final int ALLOC_MATURE         = StopTheWorld.ALLOCATORS + 2;
   public static final int SCAN_MATURE          = 2;
@@ -42,7 +44,7 @@ public class G1GC extends G1Survivor {
   static boolean hi = false;
 
   public static final CopySpace matureSpace0 = new CopySpace("matureSpace0", false, VMRequest.discontiguous());
-  static static final int MS0 = matureSpace0.getDescriptor();
+  public static final int MS0 = matureSpace0.getDescriptor();
   public static final Address MATURE0_START = matureSpace0.getStart();
 
   public static final CopySpace matureSpace1 = new CopySpace("matureSpace1", true, VMRequest.discontiguous());
@@ -130,7 +132,7 @@ public class G1GC extends G1Survivor {
 
   @Override
   @Interruptible
-  protected void registerSpecializedMethods() {
+  public void registerSpecializedMethods() {
     TransitiveClosure.registerSpecializedScan(SCAN_MATURE, G1MatureTraceLocal.class);
     super.registerSpecializedMethods();
   }

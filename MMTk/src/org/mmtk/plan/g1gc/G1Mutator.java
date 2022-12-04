@@ -33,13 +33,13 @@ public class G1Mutator extends G1SurvivorMutator {
   @Override
   public void initMutator(int id) {
     super.initMutator(id);
-    mature.rebind(G1GC.toSpace());
+    mature.rebind(G1.toSpace());
   }
 
   @Override
   @Inline
   public final Address alloc(int bytes, int align, int offset, int allocator, int site) {
-    if (allocator == G1GC.ALLOC_MATURE) {
+    if (allocator == G1.ALLOC_MATURE) {
       return mature.alloc(bytes, align, offset);
     }
 
@@ -48,7 +48,7 @@ public class G1Mutator extends G1SurvivorMutator {
 
   @Override
   public final Allocator getAllocatorFromSpace(Space space) {
-    if (space == G1GC.matureSpace0 || space == G1GC.matureSpace1) 
+    if (space == G1.matureSpace0 || space == G1.matureSpace1) 
       return mature;
 
     return super.getAllocatorFromSpace(space);
@@ -57,15 +57,15 @@ public class G1Mutator extends G1SurvivorMutator {
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
     if (global().traceFullHeap()) {
-      if (phaseId == G1GC.PREPARE) {
+      if (phaseId == G1.PREPARE) {
           super.collectionPhase(phaseId, primary);
           mature.reset();
           return;
       } 
         
-      if (phaseId == G1GC.RELEASE) {
+      if (phaseId == G1.RELEASE) {
         super.collectionPhase(phaseId, primary);
-        mature.rebind(G1GC.toSpace());
+        mature.rebind(G1.toSpace());
         return;
       }
     }
@@ -73,8 +73,8 @@ public class G1Mutator extends G1SurvivorMutator {
     super.collectionPhase(phaseId, primary);
   }
 
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 
 }

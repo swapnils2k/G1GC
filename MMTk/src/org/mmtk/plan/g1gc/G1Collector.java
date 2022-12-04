@@ -12,7 +12,6 @@
  */
 package org.mmtk.plan.g1gc;
 
-import org.mmtk.plan.generational.G1MatureTraceLocal;
 import org.mmtk.plan.generational.Gen;
 import org.mmtk.plan.generational.GenCollector;
 import org.mmtk.plan.Plan;
@@ -45,20 +44,20 @@ import org.vmmagic.pragma.*;
  * @see org.mmtk.plan.CollectorContext
  */
 @Uninterruptible
-public class G1MatureCollector extends G1SurvivorCollector {
+public class G1Collector extends G1SurvivorCollector {
 
   private final CopyLocal mature;
   private final G1MatureTraceLocal matureTrace;
   
-  public G1MatureCollector() {
-    mature = new CopyLocal(G1GC.toSpace());
+  public G1Collector() {
+    mature = new CopyLocal(G1.toSpace());
     matureTrace = new G1MatureTraceLocal(global().matureTrace, this);
   }
 
   @Override
   @Inline
   public Address allocCopy(ObjectReference original, int bytes, int align, int offset, int allocator) {
-      if(allocator == G1GC.ALLOC_MATURE)
+      if(allocator == G1.ALLOC_MATURE)
           return mature.alloc(bytes, align, offset);
         
       return super.allocCopy(original, bytes, align, offset, allocator);
@@ -67,18 +66,18 @@ public class G1MatureCollector extends G1SurvivorCollector {
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
     if (global().traceFullHeap()) {
-      if (phaseId == G1GC.PREPARE) {
+      if (phaseId == G1.PREPARE) {
           matureTrace.prepare();
-          mature.rebind(G1GC.toSpace());
+          mature.rebind(G1.toSpace());
           return;
       }
       
-      if (phaseId == G1GC.CLOSURE) {
+      if (phaseId == G1.CLOSURE) {
         matureTrace.completeTrace();
         return;
       }
 
-      if (phaseId == G1GC.RELEASE) {
+      if (phaseId == G1.RELEASE) {
         matureTrace.release();
         return;
       }
@@ -87,8 +86,8 @@ public class G1MatureCollector extends G1SurvivorCollector {
     super.collectionPhase(phaseId, primary);
   }
 
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 
   @Override
@@ -96,6 +95,6 @@ public class G1MatureCollector extends G1SurvivorCollector {
     if(global().traceFullHeap())
         return matureTrace;
 
-    return super.getFullHeapTrace();
+    return super.getCurrentTrace();
   }
 }

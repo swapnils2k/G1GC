@@ -47,17 +47,17 @@ public abstract class G1NurseryCollector extends StopTheWorldCollector {
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
     if(global().isCurrentGCNursery()) {
-      if (phaseId == G1GC.PREPARE) {
+      if (phaseId == G1.PREPARE) {
           nurseryTrace.prepare();
           return;
       }
 
-      if (phaseId == G1GC.CLOSURE) {
+      if (phaseId == G1.CLOSURE) {
           nurseryTrace.completeTrace();
           return;
       }
 
-      if (phaseId == G1GC.RELEASE) {
+      if (phaseId == G1.RELEASE) {
           nurseryTrace.release();
           return;
       }
@@ -67,13 +67,14 @@ public abstract class G1NurseryCollector extends StopTheWorldCollector {
   }
 
   @Inline
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 
   @Override
-  public final TraceLocal getCurrentTrace() {
+  public TraceLocal getCurrentTrace() {
       if(global().isCurrentGCNursery())
         return nurseryTrace;
+      return super.getCurrentTrace();
   }
 }

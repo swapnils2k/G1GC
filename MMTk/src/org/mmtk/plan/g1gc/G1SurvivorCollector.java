@@ -21,6 +21,9 @@ import org.mmtk.vm.VM;
 
 import org.vmmagic.pragma.*;
 
+import org.vmmagic.unboxed.Address;
+import org.vmmagic.unboxed.ObjectReference;
+
 @Uninterruptible 
 public abstract class G1SurvivorCollector extends G1NurseryCollector {
 
@@ -46,17 +49,17 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
     if(global().isCurrentGCSurvivor()) {
-      if (phaseId == G1GC.PREPARE) {
+      if (phaseId == G1.PREPARE) {
           survivorTrace.prepare();
           return;
       }
       
-      if (phaseId == G1GC.CLOSURE) {
+      if (phaseId == G1.CLOSURE) {
           survivorTrace.completeTrace();
           return;
       }
 
-      if (phaseId == G1GC.RELEASE) {
+      if (phaseId == G1.RELEASE) {
           survivorTrace.release();
           return;
       }
@@ -71,7 +74,7 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
   }
 
   @Override
-  public final TraceLocal getCurrentTrace() {
+  public TraceLocal getCurrentTrace() {
     if(global().isCurrentGCSurvivor())
         return survivorTrace;
 

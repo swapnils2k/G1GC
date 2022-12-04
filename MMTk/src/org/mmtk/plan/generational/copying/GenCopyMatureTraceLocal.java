@@ -55,7 +55,14 @@ public final class GenCopyMatureTraceLocal extends GenMatureTraceLocal {
    */
   @Override
   public ObjectReference traceObject(ObjectReference object) {
-   
+    if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
+    if (object.isNull()) return object;
+
+    if (Space.isInSpace(GenCopy.MS0, object))
+      return GenCopy.matureSpace0.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
+    if (Space.isInSpace(GenCopy.MS1, object))
+      return GenCopy.matureSpace1.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
+    return super.traceObject(object);
   }
 
   @Override

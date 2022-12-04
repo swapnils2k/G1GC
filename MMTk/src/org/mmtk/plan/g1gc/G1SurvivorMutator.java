@@ -49,7 +49,7 @@ import org.vmmagic.unboxed.*;
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
-    if (phaseId == G1GC.PREPARE) {
+    if (phaseId == G1.PREPARE) {
       if(global().isCurrentGCSurvivor()){
         survivor.reset();
         return;
@@ -66,7 +66,7 @@ import org.vmmagic.unboxed.*;
   }
 
   @Inline
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 }

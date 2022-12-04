@@ -31,7 +31,7 @@ import org.vmmagic.unboxed.*;
 public final class G1SurvivorTraceLocal extends TraceLocal {
 
   public G1SurvivorTraceLocal(Trace trace, G1SurvivorCollector plan) {
-    super(G1GC.SCAN_NURSERY, trace);
+    super(G1.SCAN_NURSERY, trace);
   }
 
   @Override
@@ -39,8 +39,8 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
     if (object.isNull()) 
       return false;
 
-    if (G1GC.inSurvivor(object)) {
-      return G1GC.survivorSpace.isLive(object);
+    if (G1.inSurvivor(object)) {
+      return G1.survivorSpace.isLive(object);
     }
 
     /* During a survivor trace, all objects not in the nursery are considered alive */
@@ -50,8 +50,8 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
   @Override
   @Inline
   public ObjectReference traceObject(ObjectReference object) {
-    if (G1GC.inSurvivor(object)) {
-      return G1GC.survivorSpace.traceObject(this, object, G1GC.ALLOC_MATURE);
+    if (G1.inSurvivor(object)) {
+      return G1.survivorSpace.traceObject(this, object, G1.ALLOC_MATURE);
     }
 
     processNode(object);
@@ -62,7 +62,7 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
   public boolean willNotMoveInCurrentCollection(ObjectReference object) {
     if (object.isNull()) return false;
     
-    return !G1GC.inSurvivor(object);
+    return !G1.inSurvivor(object);
   }
   
 }
