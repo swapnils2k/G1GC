@@ -12,12 +12,12 @@
  */
 package org.mmtk.plan.g1gc;
 
-import org.mmtk.plan.generational.Gen;
-import org.mmtk.plan.generational.GenCollector;
-import org.mmtk.plan.generational.GenMatureTraceLocal;
+import static org.mmtk.utility.Constants.BYTES_IN_ADDRESS;
+
+import org.mmtk.plan.TraceLocal;
 import org.mmtk.plan.Trace;
-import org.mmtk.policy.Space;
-import org.mmtk.utility.Log;
+import org.mmtk.utility.HeaderByte;
+import org.mmtk.utility.deque.*;
 import org.mmtk.vm.VM;
 
 import org.vmmagic.pragma.*;
@@ -25,76 +25,43 @@ import org.vmmagic.unboxed.*;
 
 /**
  * This class implements the core functionality for a transitive
- * closure over the heap graph, specifically in a Generational copying
- * collector.
+ * closure over the heap graph.
  */
-// @Uninterruptible
-public final class G1NurseryTraceLocal {
-// public final class G1NurseryTraceLocal extends GenMatureTraceLocal {
+@Uninterruptible
+public final class G1NurseryTraceLocal extends TraceLocal {
 
-  // /**
-  //  * @param global the global trace class to use
-  //  * @param plan the state of the generational collector
-  //  */
-  // public G1NurseryTraceLocal(Trace global, GenCollector plan) {
-  //   super(global, plan);
-  // }
+  public G1NurseryTraceLocal(Trace trace, G1NurseryCollector plan) {
+    super(G1GC.SCAN_NURSERY, trace);
+  }
 
-  // private static G1 global() {
-  //   return (G1) VM.activePlan.global();
-  // }
+  @Override
+  public boolean isLive(ObjectReference object) {
+    if (object.isNull()) 
+      return false;
 
-  // /**
-  //  * Trace a reference into the mature space during GC. This involves
-  //  * determining whether the instance is in from space, and if so,
-  //  * calling the <code>traceObject</code> method of the Copy
-  //  * collector.
-  //  *
-  //  * @param object The object reference to be traced.  This is <i>NOT</i> an
-  //  * interior pointer.
-  //  * @return The possibly moved reference.
-  //  */
-  // @Override
-  // public ObjectReference traceObject(ObjectReference object) {
-  //   // Log.writeln("Inside G1 Mature Trace Local 1");
-  //   if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
-  //   if (object.isNull()) return object;
-  //   // Log.writeln("Inside G1 Mature Trace Local 2");
-  //   if (Space.isInSpace(G1.NS0, object))
-  //     return G1.nursery0.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
-  //   if (Space.isInSpace(G1.NS1, object))
-  //     return G1.nursery1.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
-  //     // Log.writeln("Inside G1 Mature Trace Local 3");
-  //   return super.traceObject(object);
-  // }
+    if (G1GC.inNursery(object)) {
+      return G1GC.nurserySpace.isLive(object);
+    }
 
-  // @Override
-  // public boolean isLive(ObjectReference object) {
-  //   if (object.isNull()) return false;
-  //   if (Space.isInSpace(G1.NS0, object))
-  //     return G1.hi ? G1.nursery0.isLive(object) : true;
-  //   if (Space.isInSpace(G1.NS1, object))
-  //     return G1.hi ? true : G1.nursery1.isLive(object);
-  //   return super.isLive(object);
-  // }
+    /* During a nursery trace, all objects not in the nursery are considered alive */
+    return true;
+  }
 
-  // /****************************************************************************
-  //  *
-  //  * Object processing and tracing
-  //  */
+  @Override
+  @Inline
+  public ObjectReference traceObject(ObjectReference object) {
+    if (G1GC.inNursery(object)) {
+      return G1GC.nurserySpace.traceObject(this, object, G1GC.ALLOC_SURVIVOR);
+    }
 
+    processNode(object);
+    return object;
+  }
 
-  // /**
-  //  * {@inheritDoc}
-  //  */
-  // @Override
-  // public boolean willNotMoveInCurrentCollection(ObjectReference object) {
-  //   if (Space.isInSpace(G1.NS0, object)) {
-  //     return true;
-  //   }
-  //   if (Space.isInSpace(G1.NS1, object)) {
-  //     return false;
-  //   }
-  //   return super.willNotMoveInCurrentCollection(object);
-  // }
+  @Override
+  public boolean willNotMoveInCurrentCollection(ObjectReference object) {
+    if (object.isNull()) return false;
+    return !G1GC.inNursery(object);
+  }
+
 }

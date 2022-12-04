@@ -12,86 +12,66 @@
  */
 package org.mmtk.plan.g1gc;
 
-import org.mmtk.plan.generational.Gen;
-import org.mmtk.plan.generational.GenCollector;
-import org.mmtk.plan.generational.GenMatureTraceLocal;
+import org.mmtk.plan.TraceLocal;
 import org.mmtk.plan.Trace;
-import org.mmtk.policy.Space;
+import org.mmtk.utility.HeaderByte;
+import org.mmtk.utility.deque.*;
 
 import org.mmtk.vm.VM;
 
-import org.vmmagic.pragma.*;
 import org.vmmagic.unboxed.*;
+import org.vmmagic.pragma.*;
 
-/**
- * This class implements the core functionality for a transitive
- * closure over the heap graph, specifically in a Generational copying
- * collector.
- */
 @Uninterruptible
-public final class G1MatureTraceLocal extends GenMatureTraceLocal {
+public abstract class G1MatureTraceLocal extends TraceLocal {
 
-  /**
-   * @param global the global trace class to use
-   * @param plan the state of the generational collector
-   */
-  public G1MatureTraceLocal(Trace global, GenCollector plan) {
-    super(global, plan);
+  public G1MatureTraceLocal(Trace trace, G1MatureCollector plan) {
+    super(G1GC.SCAN_MATURE, trace);
   }
 
-  private static G1 global() {
-    return (G1) VM.activePlan.global();
-  }
-
-  /**
-   * Trace a reference into the mature space during GC. This involves
-   * determining whether the instance is in from space, and if so,
-   * calling the <code>traceObject</code> method of the Copy
-   * collector.
-   *
-   * @param object The object reference to be traced.  This is <i>NOT</i> an
-   * interior pointer.
-   * @return The possibly moved reference.
-   */
   @Override
+  @Inline
+  public boolean isLive(ObjectReference object) {
+    if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(!object.isNull());
+    if (G1GC.inNursery(object)) {
+      return G1GC.nurserySpace.isLive(object);
+    }
+
+    if (G1GC.inSurvivor(object)) {
+      return G1GC.survivorSpace.isLive(object);
+    }
+
+    if(G1GC.inMature(object)) {
+      return G1GC.toSpace().isLive(object);
+    }
+
+    return super.isLive(object);
+  }
+
+  @Override
+  @Inline
   public ObjectReference traceObject(ObjectReference object) {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
     if (object.isNull()) return object;
 
-    if (Space.isInSpace(G1.MS0, object))
-      return G1.matureSpace0.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
-    if (Space.isInSpace(G1.MS1, object))
-      return G1.matureSpace1.traceObject(this, object, Gen.ALLOC_MATURE_MAJORGC);
+    if(G1GC.inNursery(object))
+      return G1GC.nurserySpace.traceObject(this, object, G1GC.ALLOC_MATURE);
+
+    if(G1GC.inSurvivor(object))
+      return G1GC.survivorSpace.traceObject(this, object, G1GC.ALLOC_MATURE);
+
+    if (Space.isInSpace(G1GC.MS0, object))
+      return G1GC.matureSpace0.traceObject(this, object, G1GC.ALLOC_MATURE);
+
+    if (Space.isInSpace(G1GC.MS1, object))
+      return G1GC.matureSpace0.traceObject(this, object, G1GC.ALLOC_MATURE);
+
+    
     return super.traceObject(object);
   }
 
-  @Override
-  public boolean isLive(ObjectReference object) {
-    if (object.isNull()) return false;
-    if (Space.isInSpace(G1.MS0, object))
-      return G1.hi ? G1.matureSpace0.isLive(object) : true;
-    if (Space.isInSpace(G1.MS1, object))
-      return G1.hi ? true : G1.matureSpace1.isLive(object);
-    return super.isLive(object);
-  }
-
-  /****************************************************************************
-   *
-   * Object processing and tracing
-   */
-
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean willNotMoveInCurrentCollection(ObjectReference object) {
-    if (Space.isInSpace(G1.toSpaceDesc(), object)) {
-      return true;
-    }
-    if (Space.isInSpace(G1.fromSpaceDesc(), object)) {
-      return false;
-    }
-    return super.willNotMoveInCurrentCollection(object);
+  @Inline
+  private static G1GC global() {
+    return (G1GC) VM.activePlan.global();
   }
 }
