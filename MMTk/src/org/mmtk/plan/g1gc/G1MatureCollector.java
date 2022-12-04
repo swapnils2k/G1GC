@@ -22,6 +22,8 @@ import org.mmtk.utility.HeaderByte;
 import org.mmtk.utility.alloc.Allocator;
 import org.mmtk.vm.VM;
 
+import org.mmtk.plan.generational.copying.GenCopyMatureTraceLocal;
+
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
 
@@ -54,7 +56,7 @@ public class G1MatureCollector extends G1SurvivorCollector {
   private final CopyLocal mature;
 
   /** The trace object for full-heap collections */
-  private final GenCopyMatureTraceLocal matureTrace;
+  private final G1MatureTraceLocal matureTrace;
 
   /****************************************************************************
    *
@@ -66,7 +68,7 @@ public class G1MatureCollector extends G1SurvivorCollector {
    */
   public G1MatureCollector() {
     mature = new CopyLocal(G1GC.toSpace());
-    matureTrace = new GenCopyMatureTraceLocal(global().matureTrace, this);
+    matureTrace = new G1MatureTraceLocal(global().matureTrace, this);
   }
 
   @Override
@@ -130,6 +132,6 @@ public class G1MatureCollector extends G1SurvivorCollector {
     if(global().traceFullHeap())
         return matureTrace;
 
-    return super.getFullHeapTrace();
+    return super.getCurrentTrace();
   }
 }

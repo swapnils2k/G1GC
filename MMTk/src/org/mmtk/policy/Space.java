@@ -429,7 +429,6 @@ public abstract class Space {
    * @return The start of the first page if successful, zero on
    * failure.
    */
-  @LogicallyUninterruptible
   public final Address acquire(int pages) {
     boolean allowPoll = VM.activePlan.isMutator() && Plan.isInitialized();
 

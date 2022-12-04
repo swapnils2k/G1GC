@@ -15,7 +15,7 @@ package org.mmtk.plan.g1gc;
 import org.mmtk.plan.*;
 import org.mmtk.policy.LargeObjectLocal;
 import org.mmtk.utility.deque.*;
-
+import org.mmtk.plan.generational.GenNurseryTraceLocal;
 import org.mmtk.vm.VM;
 
 import org.vmmagic.pragma.*;
@@ -43,18 +43,18 @@ import org.vmmagic.pragma.*;
   /**
    *
    */
-  protected final GenNurseryTraceLocal nurseryTrace;
+  protected final G1NurseryTraceLocal nurseryTrace;
   protected final LargeObjectLocal los;
-  protected final ObjectReferenceDeque modbuf;
-  protected final AddressDeque remset;
-  protected final AddressPairDeque arrayRemset;
+  protected  ObjectReferenceDeque modbuf;
+  protected  AddressDeque remset;
+  protected  AddressPairDeque arrayRemset;
 
   public G1NurseryCollector() {
     los = new LargeObjectLocal(Plan.loSpace);
-    arrayRemset = new AddressPairDeque(global().arrayRemsetPool);
-    remset = new AddressDeque("remset", global().remsetPool);
-    modbuf = new ObjectReferenceDeque("modbuf", global().modbufPool);
-    nurseryTrace = new GenNurseryTraceLocal(global().nurseryTrace, this);
+    // arrayRemset = new AddressPairDeque(global().arrayRemsetPool);
+    // remset = new AddressDeque("remset", global().remsetPool);
+    // modbuf = new ObjectReferenceDeque("modbuf", global().modbufPool);
+    nurseryTrace = new G1NurseryTraceLocal(global().nurseryTrace, this);
   }
 
   @Override
@@ -62,9 +62,9 @@ import org.vmmagic.pragma.*;
   public void collectionPhase(short phaseId, boolean primary) {
     if (phaseId == G1GC.PREPARE) {
       los.prepare(true);
-      global().arrayRemsetPool.prepareNonBlocking();
-      global().remsetPool.prepareNonBlocking();
-      global().modbufPool.prepareNonBlocking();
+      // global().arrayRemsetPool.prepareNonBlocking();
+      // global().remsetPool.prepareNonBlocking();
+      // global().modbufPool.prepareNonBlocking();
       nurseryTrace.prepare();
       return;
     }
@@ -94,9 +94,9 @@ import org.vmmagic.pragma.*;
       los.release(true);
       if (global().isCurrentGCNursery()) {
         nurseryTrace.release();
-        global().arrayRemsetPool.reset();
-        global().remsetPool.reset();
-        global().modbufPool.reset();
+        // global().arrayRemsetPool.reset();
+        // global().remsetPool.reset();
+        // global().modbufPool.reset();
       }
       return;
     }
@@ -110,8 +110,9 @@ import org.vmmagic.pragma.*;
   }
 
   @Override
-  public final TraceLocal getCurrentTrace() {
+  public TraceLocal getCurrentTrace() {
     if(global().isCurrentGCNursery())
         return nurseryTrace;
+    return super.getCurrentTrace();
   }
 }

@@ -29,14 +29,14 @@ import org.vmmagic.unboxed.*;
 
   protected final CopyLocal survivor = new CopyLocal(G1Survivor.nurserySpace);
 
-  private final ObjectReferenceDeque modbuf;   
-  protected final WriteBuffer remset;          
-  protected final AddressPairDeque arrayRemset;
+  private  ObjectReferenceDeque modbuf;   
+  protected  WriteBuffer remset;          
+  protected  AddressPairDeque arrayRemset;
 
   public G1SurvivorMutator() {
-    modbuf = new ObjectReferenceDeque("modbuf", global().s_modbufPool);
-    remset = new WriteBuffer(global().s_remsetPool);
-    arrayRemset = new AddressPairDeque(global().s_arrayRemsetPool);
+    // modbuf = new ObjectReferenceDeque("modbuf", global().s_modbufPool);
+    // remset = new WriteBuffer(global().s_remsetPool);
+    // arrayRemset = new AddressPairDeque(global().s_arrayRemsetPool);
   }
 
   
@@ -82,7 +82,7 @@ import org.vmmagic.unboxed.*;
 
   @Inline
   @Override
-  public final boolean objectReferenceBulkCopy(ObjectReference src, Offset srcOffset, ObjectReference dst, Offset dstOffset, int bytes) {
+  public boolean objectReferenceBulkCopy(ObjectReference src, Offset srcOffset, ObjectReference dst, Offset dstOffset, int bytes) {
     if (!G1Survivor.inSurvivor(dst)) {
       Address start = dst.toAddress().plus(dstOffset);
       arrayRemset.insert(start, start.plus(bytes));

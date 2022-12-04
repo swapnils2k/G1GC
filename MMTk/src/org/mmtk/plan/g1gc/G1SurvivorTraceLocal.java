@@ -30,9 +30,9 @@ import org.vmmagic.unboxed.*;
 @Uninterruptible
 public final class G1SurvivorTraceLocal extends TraceLocal {
 
-  private final ObjectReferenceDeque modbuf;
-  private final AddressDeque remset;
-  private final AddressPairDeque arrayRemset;
+  private  ObjectReferenceDeque modbuf;
+  private  AddressDeque remset;
+  private  AddressPairDeque arrayRemset;
 
   public G1SurvivorTraceLocal(Trace trace, G1SurvivorCollector plan) {
     super(G1GC.SCAN_NURSERY, trace);

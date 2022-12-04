@@ -16,6 +16,8 @@ import org.mmtk.plan.*;
 import org.mmtk.policy.LargeObjectLocal;
 import org.mmtk.policy.CopyLocal;
 import org.mmtk.utility.deque.*;
+import org.vmmagic.unboxed.Address;
+import org.vmmagic.unboxed.ObjectReference;
 
 import org.mmtk.vm.VM;
 
@@ -47,16 +49,16 @@ import org.vmmagic.pragma.*;
   protected final G1NurseryTraceLocal survivorTrace;
   protected final CopyLocal survivor;
   protected final LargeObjectLocal los;
-  protected final ObjectReferenceDeque modbuf;
-  protected final AddressDeque remset;
-  protected final AddressPairDeque arrayRemset;
+  // protected final ObjectReferenceDeque modbuf;
+  // protected final AddressDeque remset;
+  // protected final AddressPairDeque arrayRemset;
 
   public G1SurvivorCollector() {
     los = new LargeObjectLocal(Plan.loSpace);
     survivor = new CopyLocal(G1Survivor.survivorSpace);
-    arrayRemset = new AddressPairDeque(global().s_arrayRemsetPool);
-    remset = new AddressDeque("remset", global().s_remsetPool);
-    modbuf = new ObjectReferenceDeque("modbuf", global().s_modbufPool);
+    // arrayRemset = new AddressPairDeque(global().s_arrayRemsetPool);
+    // remset = new AddressDeque("remset", global().s_remsetPool);
+    // modbuf = new ObjectReferenceDeque("modbuf", global().s_modbufPool);
     survivorTrace = new G1NurseryTraceLocal(global().nurseryTrace, this);
   }
 
@@ -76,9 +78,9 @@ import org.vmmagic.pragma.*;
     if(global().isCurrentGCSurvivor() || global().traceFullHeap()) {
       if (phaseId == G1GC.PREPARE) {
         los.prepare(true);
-        global().s_arrayRemsetPool.prepareNonBlocking();
-        global().s_remsetPool.prepareNonBlocking();
-        global().s_modbufPool.prepareNonBlocking();
+        // global().s_arrayRemsetPool.prepareNonBlocking();
+        // global().s_remsetPool.prepareNonBlocking();
+        // global().s_modbufPool.prepareNonBlocking();
         survivorTrace.prepare();
         return;
       }
@@ -110,9 +112,9 @@ import org.vmmagic.pragma.*;
         los.release(true);
         if (global().isCurrentGCSurvivor()) {
           survivorTrace.release();
-          global().s_arrayRemsetPool.reset();
-          global().s_remsetPool.reset();
-          global().s_modbufPool.reset();
+          // global().s_arrayRemsetPool.reset();
+          // global().s_remsetPool.reset();
+          // global().s_modbufPool.reset();
         }
         return;
       }
@@ -127,7 +129,7 @@ import org.vmmagic.pragma.*;
   }
 
   @Override
-  public final TraceLocal getCurrentTrace() {
+  public TraceLocal getCurrentTrace() {
     if(global().isCurrentGCSurvivor())
         return survivorTrace;
 

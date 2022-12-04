@@ -55,7 +55,8 @@ public final class GenCopyMatureTraceLocal extends GenMatureTraceLocal {
    */
   @Override
   public ObjectReference traceObject(ObjectReference object) {
-   
+      //to-do?
+      return null;
   }
 
   @Override

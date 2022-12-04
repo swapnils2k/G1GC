@@ -29,14 +29,14 @@ import org.vmmagic.unboxed.*;
 
   protected final CopyLocal nursery = new CopyLocal(G1Nursery.nurserySpace);
 
-  private final ObjectReferenceDeque modbuf;   
-  protected final WriteBuffer remset;          
-  protected final AddressPairDeque arrayRemset;
+  private  ObjectReferenceDeque modbuf;   
+  protected  WriteBuffer remset;          
+  protected  AddressPairDeque arrayRemset;
 
   public G1NurseryMutator() {
-    modbuf = new ObjectReferenceDeque("modbuf", global().modbufPool);
-    remset = new WriteBuffer(global().remsetPool);
-    arrayRemset = new AddressPairDeque(global().arrayRemsetPool);
+    // modbuf = new ObjectReferenceDeque("modbuf", global().modbufPool);
+    // remset = new WriteBuffer(global().remsetPool);
+    // arrayRemset = new AddressPairDeque(global().arrayRemsetPool);
   }
 
   
@@ -106,7 +106,7 @@ import org.vmmagic.unboxed.*;
 
   @Inline
   @Override
-  public final boolean objectReferenceBulkCopy(ObjectReference src, Offset srcOffset, ObjectReference dst, Offset dstOffset, int bytes) {
+  public boolean objectReferenceBulkCopy(ObjectReference src, Offset srcOffset, ObjectReference dst, Offset dstOffset, int bytes) {
     if (!G1Nursery.inNursery(dst)) {
       Address start = dst.toAddress().plus(dstOffset);
       arrayRemset.insert(start, start.plus(bytes));

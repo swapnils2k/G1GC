@@ -10,7 +10,10 @@
  *  See the COPYRIGHT.txt file distributed with this work for information
  *  regarding copyright ownership.
  */
-package org.mmtk.plan.generational;
+package org.mmtk.plan.g1gc;
+import org.mmtk.policy.Space;
+
+import org.mmtk.plan.generational.Gen;
 
 import org.mmtk.plan.TraceLocal;
 import org.mmtk.plan.Trace;
@@ -27,7 +30,7 @@ import org.vmmagic.pragma.*;
  * closure over the heap graph.
  */
 @Uninterruptible
-public abstract class G1MatureTraceLocal extends TraceLocal {
+public final class G1MatureTraceLocal extends TraceLocal {
 
   /****************************************************************************
    *
@@ -52,7 +55,7 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
    * @param trace the global trace class to use
    * @param plan the state of the generational collector
    */
-  public G1MatureTraceLocal(int specializedScan, Trace trace, GenCollector plan) {
+  public G1MatureTraceLocal(int specializedScan, Trace trace, G1MatureCollector plan) {
     super(specializedScan, trace);
     this.modbuf = plan.modbuf;
     this.remset = plan.remset;
@@ -63,7 +66,7 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
    * @param trace the global trace class to use
    * @param plan the state of the generational collector
    */
-  public G1MatureTraceLocal(Trace trace, GenCollector plan) {
+  public G1MatureTraceLocal(Trace trace, G1MatureCollector plan) {
     super(Gen.SCAN_MATURE, trace);
     this.modbuf = plan.modbuf;
     this.remset = plan.remset;
@@ -82,8 +85,8 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
   @Inline
   public boolean isLive(ObjectReference object) {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(!object.isNull());
-    if (Gen.inNursery(object)) {
-      return Gen.nurserySpace.isLive(object);
+    if (G1GC.inNursery(object)) {
+      return G1GC.nurserySpace.isLive(object);
     }
     return super.isLive(object);
   }
@@ -99,7 +102,7 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
    */
   @Override
   public boolean willNotMoveInCurrentCollection(ObjectReference object) {
-    if (Gen.inNursery(object))
+    if (G1GC.inNursery(object))
       return false;
     else
       return super.willNotMoveInCurrentCollection(object);
@@ -108,7 +111,7 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
   @Override
   @Inline
   public ObjectReference traceObject(ObjectReference object) {
-    if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
+    //if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
     if (object.isNull()) return object;
 
     if(G1GC.inNursery(object))
