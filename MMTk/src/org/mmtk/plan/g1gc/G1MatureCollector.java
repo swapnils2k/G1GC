@@ -27,7 +27,7 @@ import org.vmmagic.pragma.*;
 
 /**
  * This class implements <i>per-collector thread</i> behavior and state for
- * the <code>G1</code> two-generational copying collector.<p>
+ * the <code>GenCopy</code> two-generational copying collector.<p>
  *
  * Specifically, this class defines semantics specific to the collection of
  * the mature generation (<code>GenCollector</code> defines nursery semantics).
@@ -35,7 +35,7 @@ import org.vmmagic.pragma.*;
  * allocation into the mature space), and the mature space per-collector thread
  * collection time semantics are defined.<p>
  *
- * @see G1 for a description of the <code>G1</code> algorithm.
+ * @see GenCopy for a description of the <code>GenCopy</code> algorithm.
  *
  * @see GenCopy
  * @see GenCopyMutator
@@ -44,7 +44,7 @@ import org.vmmagic.pragma.*;
  * @see org.mmtk.plan.CollectorContext
  */
 @Uninterruptible
-public class G1Collector extends GenCollector {
+public class G1MatureCollector extends G1SurvivorCollector {
 
   /******************************************************************
    * Instance fields
@@ -54,7 +54,7 @@ public class G1Collector extends GenCollector {
   private final CopyLocal mature;
 
   /** The trace object for full-heap collections */
-  private final G1MatureTraceLocal matureTrace;
+  private final GenCopyMatureTraceLocal matureTrace;
 
   /****************************************************************************
    *
@@ -64,52 +64,25 @@ public class G1Collector extends GenCollector {
   /**
    * Constructor
    */
-  public G1Collector() {
-    mature = new CopyLocal(G1.toSpace());
-    matureTrace = new G1MatureTraceLocal(global().matureTrace, this);
+  public G1MatureCollector() {
+    mature = new CopyLocal(G1GC.toSpace());
+    matureTrace = new GenCopyMatureTraceLocal(global().matureTrace, this);
   }
 
-  /****************************************************************************
-   *
-   * Collection-time allocation
-   */
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   @Inline
   public Address allocCopy(ObjectReference original, int bytes,
       int align, int offset, int allocator) {
     if (allocator == Plan.ALLOC_LOS) {
       if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(Allocator.getMaximumAlignedSize(bytes, align) > Plan.MAX_NON_LOS_COPY_BYTES);
-      return los.alloc(bytes, align, offset);
+          return los.alloc(bytes, align, offset);
     } else {
-      if (VM.VERIFY_ASSERTIONS) {
-        VM.assertions._assert(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
-        VM.assertions._assert(allocator == G1.ALLOC_MATURE_MINORGC ||
-            allocator == G1.ALLOC_MATURE_MAJORGC);
-      }
-      return mature.alloc(bytes, align, offset);
+      if(allocator == G1GC.ALLOC_MATURE)
+        return mature.alloc(bytes, align, offset);
+      
+      return super.allocCopy(original, bytes, align, offset, allocator);
     }
-  }
-
-  /**
-   * {@inheritDoc}<p>
-   *
-   * In this case we clear any bits used for this object's GC metadata.
-   */
-  @Override
-  @Inline
-  public final void postCopy(ObjectReference object, ObjectReference typeRef,
-      int bytes, int allocator) {
-    ForwardingWord.clearForwardingBits(object);
-    if (allocator == Plan.ALLOC_LOS)
-      Plan.loSpace.initializeHeader(object, false);
-    else if (G1.IGNORE_REMSETS)
-      G1.immortalSpace.traceObject(getCurrentTrace(), object); // FIXME this does not look right
-    if (Gen.USE_OBJECT_BARRIER)
-      HeaderByte.markAsUnlogged(object);
+    
   }
 
 
@@ -124,15 +97,16 @@ public class G1Collector extends GenCollector {
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
     if (global().traceFullHeap()) {
-      if (phaseId == G1.PREPARE) {
+      if (phaseId == G1GC.PREPARE) {
         super.collectionPhase(phaseId, primary);
-        if (global().gcFullHeap) mature.rebind(G1.toSpace());
+        if (global().gcFullHeap) 
+          mature.rebind(G1GC.toSpace());
       }
-      if (phaseId == G1.CLOSURE) {
+      if (phaseId == G1GC.CLOSURE) {
         matureTrace.completeTrace();
         return;
       }
-      if (phaseId == G1.RELEASE) {
+      if (phaseId == G1GC.RELEASE) {
         matureTrace.release();
         super.collectionPhase(phaseId, primary);
         return;
@@ -146,18 +120,16 @@ public class G1Collector extends GenCollector {
    * Miscellaneous
    */
 
-  /** @return The active global plan as a <code>G1</code> instance. */
-  private static G1 global() {
-    return (G1) VM.activePlan.global();
-  }
-
-  /** Show the status of the mature allocator. */
-  protected final void showMature() {
-    mature.show();
+  /** @return The active global plan as a <code>GenCopy</code> instance. */
+  private static G1GC global() {
+    return (G1GC) VM.activePlan.global();
   }
 
   @Override
-  public final TraceLocal getFullHeapTrace() {
-    return matureTrace;
+  public final TraceLocal getCurrentTrace() {
+    if(global().traceFullHeap())
+        return matureTrace;
+
+    return super.getFullHeapTrace();
   }
 }
