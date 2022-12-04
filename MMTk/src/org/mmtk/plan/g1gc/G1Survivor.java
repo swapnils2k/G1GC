@@ -68,6 +68,7 @@ public class G1Survivor extends G1Nursery {
       }
 
       if(traceFullHeap()) {
+        super.collectionPhase(phaseId);
         survivorTrace.prepare();
         return; 
       }
@@ -121,14 +122,6 @@ public class G1Survivor extends G1Nursery {
   @Inline
   static boolean inSurvivor(ObjectReference obj) {
     return inSurvivor(obj.toAddress());
-  }
-
-  @Override
-  public boolean willNeverMove(ObjectReference object) {
-    if (Space.isInSpace(SURVIVOR, object))
-      return false;
-
-    return super.willNeverMove(object);
   }
 
   @Override

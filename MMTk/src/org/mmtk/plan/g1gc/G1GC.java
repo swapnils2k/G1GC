@@ -38,6 +38,7 @@ public class G1GC extends G1Survivor {
 
   public static final int ALLOC_MATURE         = StopTheWorld.ALLOCATORS + 2;
   public static final int SCAN_MATURE          = 2;
+
   static boolean hi = false;
 
   public static final CopySpace matureSpace0 = new CopySpace("matureSpace0", false, VMRequest.discontiguous());
@@ -49,6 +50,7 @@ public class G1GC extends G1Survivor {
   public static final Address MATURE1_START = matureSpace1.getStart();
 
   final Trace matureTrace = new Trace(metaDataSpace);
+
 
   static CopySpace toSpace() {
     return hi ? matureSpace1 : matureSpace0;
@@ -115,7 +117,6 @@ public class G1GC extends G1Survivor {
     return inSurvivor(obj.toAddress());
   }
 
-
   @Override
   @Inline
   public int getPagesUsed() {
@@ -125,12 +126,6 @@ public class G1GC extends G1Survivor {
   @Override
   public final int getCollectionReserve() {
     return toSpace().reservedPages() + super.getCollectionReserve();
-  }
-
-  @Override
-  @Inline
-  public Space activeMatureSpace() {
-    return toSpace();
   }
 
   @Override

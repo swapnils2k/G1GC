@@ -21,25 +21,6 @@ import org.mmtk.vm.VM;
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
 
-/**
- * This class implements <i>per-mutator thread</i> behavior and state for
- * the <code>GenCopy</code> two-generational copying collector.<p>
- *
- * Specifically, this class defines mutator-time semantics specific to the
- * mature generation (<code>GenMutator</code> defines nursery semantics).
- * In particular the mature space allocator is defined (for mutator-time
- * allocation into the mature space via pre-tenuring), and the mature space
- * per-mutator thread collection time semantics are defined (rebinding
- * the mature space allocator).<p>
- *
- * @see GenCopy for a description of the <code>GenCopy</code> algorithm.
- *
- * @see GenCopy
- * @see GenCopyCollector
- * @see GenMutator
- * @see org.mmtk.plan.StopTheWorldMutator
- * @see org.mmtk.plan.MutatorContext
- */
 @Uninterruptible
 public class G1Mutator extends G1SurvivorMutator {
  
@@ -66,41 +47,32 @@ public class G1Mutator extends G1SurvivorMutator {
   }
 
   @Override
-  @Inline
-  public final void postAlloc(ObjectReference object, ObjectReference typeRef,
-      int bytes, int allocator) {
-    // nothing to be done
-    if (allocator == G1GC.ALLOC_MATURE) return;
-    super.postAlloc(object, typeRef, bytes, allocator);
-  }
-
-  @Override
   public final Allocator getAllocatorFromSpace(Space space) {
-    if (space == G1GC.matureSpace0 || space == G1GC.matureSpace1) return mature;
+    if (space == G1GC.matureSpace0 || space == G1GC.matureSpace1) 
+      return mature;
+
     return super.getAllocatorFromSpace(space);
   }
 
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
     if (global().traceFullHeap()) {
+      if (phaseId == G1GC.PREPARE) {
+          super.collectionPhase(phaseId, primary);
+          mature.reset();
+          return;
+      } 
+        
       if (phaseId == G1GC.RELEASE) {
         super.collectionPhase(phaseId, primary);
-        if (global().gcFullHeap) 
-          mature.rebind(G1GC.toSpace());
-
+        mature.rebind(G1GC.toSpace());
         return;
       }
     }
-
+  
     super.collectionPhase(phaseId, primary);
   }
 
-  /*****************************************************************************
-   *
-   * Miscellaneous
-   */
-
-  /** @return The active global plan as a <code>GenCopy</code> instance. */
   private static G1GC global() {
     return (G1GC) VM.activePlan.global();
   }

@@ -85,6 +85,7 @@ public class G1Nursery extends StopTheWorld {
       }
 
       if(traceFullHeap()) {
+        super.collectionPhase(phaseId);
         nurseryTrace.prepare();
         return;
       }

@@ -30,25 +30,10 @@ import org.vmmagic.unboxed.*;
 @Uninterruptible
 public final class G1NurseryTraceLocal extends TraceLocal {
 
-  private final ObjectReferenceDeque modbuf;
-  private final AddressDeque remset;
-  private final AddressPairDeque arrayRemset;
-
   public G1NurseryTraceLocal(Trace trace, G1NurseryCollector plan) {
     super(G1GC.SCAN_NURSERY, trace);
-    this.modbuf = plan.modbuf;
-    this.remset = plan.remset;
-    this.arrayRemset = plan.arrayRemset;
   }
 
-  /****************************************************************************
-   *
-   * Externally visible Object processing and tracing
-   */
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean isLive(ObjectReference object) {
     if (object.isNull()) 
@@ -57,6 +42,7 @@ public final class G1NurseryTraceLocal extends TraceLocal {
     if (G1GC.inNursery(object)) {
       return G1GC.nurserySpace.isLive(object);
     }
+
     /* During a nursery trace, all objects not in the nursery are considered alive */
     return true;
   }
@@ -67,40 +53,11 @@ public final class G1NurseryTraceLocal extends TraceLocal {
     if (G1GC.inNursery(object)) {
       return G1GC.nurserySpace.traceObject(this, object, G1GC.ALLOC_SURVIVOR);
     }
+
+    processNode(object);
     return object;
   }
 
-  /**
-   * Process any remembered set entries.
-   */
-  @Override
-  @Inline
-  protected void processRememberedSets() {
-    logMessage(5, "processing remset");
-    while (!remset.isEmpty()) {
-      Address loc = remset.pop();
-      if (VM.DEBUG) VM.debugging.remsetEntry(loc);
-      processRootEdge(loc, false);
-    }
-    logMessage(5, "processing array remset");
-    arrayRemset.flushLocal();
-    while (!arrayRemset.isEmpty()) {
-      Address start = arrayRemset.pop1();
-      Address guard = arrayRemset.pop2();
-      if (VM.DEBUG) VM.debugging.arrayRemsetEntry(start,guard);
-      while (start.LT(guard)) {
-        processRootEdge(start, false);
-        start = start.plus(BYTES_IN_ADDRESS);
-      }
-    }
-  }
-
-  /**
-   * Will the object move from now on during the collection.
-   *
-   * @param object The object to query.
-   * @return {@code true} if the object is guaranteed not to move.
-   */
   @Override
   public boolean willNotMoveInCurrentCollection(ObjectReference object) {
     if (object.isNull()) return false;

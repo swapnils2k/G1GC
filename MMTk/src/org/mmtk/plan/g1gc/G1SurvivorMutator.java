@@ -29,17 +29,6 @@ import org.vmmagic.unboxed.*;
 
   protected final CopyLocal survivor = new CopyLocal(G1Survivor.nurserySpace);
 
-  private final ObjectReferenceDeque modbuf;   
-  protected final WriteBuffer remset;          
-  protected final AddressPairDeque arrayRemset;
-
-  public G1SurvivorMutator() {
-    modbuf = new ObjectReferenceDeque("modbuf", global().s_modbufPool);
-    remset = new WriteBuffer(global().s_remsetPool);
-    arrayRemset = new AddressPairDeque(global().s_arrayRemsetPool);
-  }
-
-  
   @Override
   @Inline
   public Address alloc(int bytes, int align, int offset, int allocator, int site) {
@@ -50,14 +39,6 @@ import org.vmmagic.unboxed.*;
   }
 
   @Override
-  @Inline
-  public void postAlloc(ObjectReference ref, ObjectReference typeRef, int bytes, int allocator) {
-    if (allocator != G1Survivor.ALLOC_SURVIVOR) {
-      super.postAlloc(ref, typeRef, bytes, allocator);
-    }
-  }
-
-  @Override
   public Allocator getAllocatorFromSpace(Space space) {
     if (space == G1Survivor.survivorSpace) 
       return survivor;
@@ -65,54 +46,20 @@ import org.vmmagic.unboxed.*;
     return super.getAllocatorFromSpace(space);
   }
 
-  @Inline
-  private void fastPath(ObjectReference src, Address slot, ObjectReference tgt, int mode) {
-      if (!G1Survivor.inSurvivor(slot) && G1Survivor.inSurvivor(tgt)) {
-          remset.insert(slot);
-      }
-  }
-
-  @Inline
-  private void fastPath(Address slot, ObjectReference tgt) {
-    if (G1Survivor.inSurvivor(tgt)) {
-      remset.insert(slot);
-    }
-  }
-
-
-  @Inline
-  @Override
-  public final boolean objectReferenceBulkCopy(ObjectReference src, Offset srcOffset, ObjectReference dst, Offset dstOffset, int bytes) {
-    if (!G1Survivor.inSurvivor(dst)) {
-      Address start = dst.toAddress().plus(dstOffset);
-      arrayRemset.insert(start, start.plus(bytes));
-    }
-    return false;
-  }
-
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
     if (phaseId == G1GC.PREPARE) {
-      if(global().isCurrentGCSurvivor()) 
+      if(global().isCurrentGCSurvivor()){
         survivor.reset();
+        return;
+      }
         
       if (global().traceFullHeap()) {
         super.collectionPhase(phaseId, primary);
-        modbuf.flushLocal();
-        remset.flushLocal();
-        arrayRemset.flushLocal();
+        survivor.reset();
+        return;
       } 
-      return;
-    }
-
-    if (phaseId == G1GC.RELEASE) {
-      if (global().traceFullHeap()) {
-        super.collectionPhase(phaseId, primary);
-      }
-      flushRememberedSets();
-      assertRemsetsFlushed();
-      return;
     }
 
     super.collectionPhase(phaseId, primary);

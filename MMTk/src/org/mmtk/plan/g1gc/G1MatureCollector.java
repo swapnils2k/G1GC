@@ -12,6 +12,7 @@
  */
 package org.mmtk.plan.g1gc;
 
+import org.mmtk.plan.generational.G1MatureTraceLocal;
 import org.mmtk.plan.generational.Gen;
 import org.mmtk.plan.generational.GenCollector;
 import org.mmtk.plan.Plan;
@@ -46,81 +47,46 @@ import org.vmmagic.pragma.*;
 @Uninterruptible
 public class G1MatureCollector extends G1SurvivorCollector {
 
-  /******************************************************************
-   * Instance fields
-   */
-
-  /** The allocator for the mature space */
   private final CopyLocal mature;
-
-  /** The trace object for full-heap collections */
-  private final GenCopyMatureTraceLocal matureTrace;
-
-  /****************************************************************************
-   *
-   * Initialization
-   */
-
-  /**
-   * Constructor
-   */
+  private final G1MatureTraceLocal matureTrace;
+  
   public G1MatureCollector() {
     mature = new CopyLocal(G1GC.toSpace());
-    matureTrace = new GenCopyMatureTraceLocal(global().matureTrace, this);
+    matureTrace = new G1MatureTraceLocal(global().matureTrace, this);
   }
 
   @Override
   @Inline
-  public Address allocCopy(ObjectReference original, int bytes,
-      int align, int offset, int allocator) {
-    if (allocator == Plan.ALLOC_LOS) {
-      if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(Allocator.getMaximumAlignedSize(bytes, align) > Plan.MAX_NON_LOS_COPY_BYTES);
-          return los.alloc(bytes, align, offset);
-    } else {
+  public Address allocCopy(ObjectReference original, int bytes, int align, int offset, int allocator) {
       if(allocator == G1GC.ALLOC_MATURE)
-        return mature.alloc(bytes, align, offset);
-      
+          return mature.alloc(bytes, align, offset);
+        
       return super.allocCopy(original, bytes, align, offset, allocator);
-    }
-    
   }
 
-
-  /*****************************************************************************
-   *
-   * Collection
-   */
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
     if (global().traceFullHeap()) {
       if (phaseId == G1GC.PREPARE) {
-        super.collectionPhase(phaseId, primary);
-        if (global().gcFullHeap) 
+          matureTrace.prepare();
           mature.rebind(G1GC.toSpace());
+          return;
       }
+      
       if (phaseId == G1GC.CLOSURE) {
         matureTrace.completeTrace();
         return;
       }
+
       if (phaseId == G1GC.RELEASE) {
         matureTrace.release();
-        super.collectionPhase(phaseId, primary);
         return;
       }
     }
+
     super.collectionPhase(phaseId, primary);
   }
 
-  /*****************************************************************************
-   *
-   * Miscellaneous
-   */
-
-  /** @return The active global plan as a <code>GenCopy</code> instance. */
   private static G1GC global() {
     return (G1GC) VM.activePlan.global();
   }

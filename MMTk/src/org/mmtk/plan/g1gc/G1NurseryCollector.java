@@ -34,73 +34,35 @@ import org.vmmagic.pragma.*;
  * @see StopTheWorldCollector
  * @see CollectorContext
  */
-@Uninterruptible public abstract class G1NurseryCollector extends StopTheWorldCollector {
+@Uninterruptible 
+public abstract class G1NurseryCollector extends StopTheWorldCollector {
 
-  /*****************************************************************************
-   * Instance fields
-   */
-
-  /**
-   *
-   */
-  protected final GenNurseryTraceLocal nurseryTrace;
-  protected final LargeObjectLocal los;
-  protected final ObjectReferenceDeque modbuf;
-  protected final AddressDeque remset;
-  protected final AddressPairDeque arrayRemset;
+  protected final G1NurseryTraceLocal nurseryTrace;
 
   public G1NurseryCollector() {
-    los = new LargeObjectLocal(Plan.loSpace);
-    arrayRemset = new AddressPairDeque(global().arrayRemsetPool);
-    remset = new AddressDeque("remset", global().remsetPool);
-    modbuf = new ObjectReferenceDeque("modbuf", global().modbufPool);
-    nurseryTrace = new GenNurseryTraceLocal(global().nurseryTrace, this);
+    nurseryTrace = new G1NurseryTraceLocal(global().nurseryTrace, this);
   }
 
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
-    if (phaseId == G1GC.PREPARE) {
-      los.prepare(true);
-      global().arrayRemsetPool.prepareNonBlocking();
-      global().remsetPool.prepareNonBlocking();
-      global().modbufPool.prepareNonBlocking();
-      nurseryTrace.prepare();
-      return;
-    }
-    if (phaseId == Simple.STACK_ROOTS && !global().gcFullHeap) {
-      VM.scanning.computeNewThreadRoots(getCurrentTrace());
-      return;
-    }
-    if (phaseId == StopTheWorld.ROOTS) {
-      VM.scanning.computeGlobalRoots(getCurrentTrace());
-      if ( global().traceFullHeap()) {
-        VM.scanning.computeStaticRoots(getCurrentTrace());
+    if(global().isCurrentGCNursery()) {
+      if (phaseId == G1GC.PREPARE) {
+          nurseryTrace.prepare();
+          return;
       }
-      if (Plan.SCAN_BOOT_IMAGE && global().traceFullHeap()) {
-        VM.scanning.computeBootImageRoots(getCurrentTrace());
-      }
-      return;
-    }
 
-    if (phaseId == G1GC.CLOSURE) {
-      if (global().isCurrentGCNursery()) {
-        nurseryTrace.completeTrace();
+      if (phaseId == G1GC.CLOSURE) {
+          nurseryTrace.completeTrace();
+          return;
       }
-      return;
-    }
 
-    if (phaseId == G1GC.RELEASE) {
-      los.release(true);
-      if (global().isCurrentGCNursery()) {
-        nurseryTrace.release();
-        global().arrayRemsetPool.reset();
-        global().remsetPool.reset();
-        global().modbufPool.reset();
+      if (phaseId == G1GC.RELEASE) {
+          nurseryTrace.release();
+          return;
       }
-      return;
     }
-
+    
     super.collectionPhase(phaseId, primary);
   }
 
@@ -111,7 +73,7 @@ import org.vmmagic.pragma.*;
 
   @Override
   public final TraceLocal getCurrentTrace() {
-    if(global().isCurrentGCNursery())
+      if(global().isCurrentGCNursery())
         return nurseryTrace;
   }
 }

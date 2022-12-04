@@ -10,7 +10,7 @@
  *  See the COPYRIGHT.txt file distributed with this work for information
  *  regarding copyright ownership.
  */
-package org.mmtk.plan.generational;
+package org.mmtk.plan.g1gc;
 
 import org.mmtk.plan.TraceLocal;
 import org.mmtk.plan.Trace;
@@ -22,87 +22,30 @@ import org.mmtk.vm.VM;
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
 
-/**
- * This abstract class implements the core functionality for a transitive
- * closure over the heap graph.
- */
 @Uninterruptible
 public abstract class G1MatureTraceLocal extends TraceLocal {
 
-  /****************************************************************************
-   *
-   * Instance fields.
-   */
-
-  /**
-   *
-   */
-  private final ObjectReferenceDeque modbuf;
-  private final AddressDeque remset;
-  private final AddressPairDeque arrayRemset;
-
-  /****************************************************************************
-   *
-   * Initialization
-   */
-
-  /**
-   *
-   * @param specializedScan the id of the specialized scan
-   * @param trace the global trace class to use
-   * @param plan the state of the generational collector
-   */
-  public G1MatureTraceLocal(int specializedScan, Trace trace, GenCollector plan) {
-    super(specializedScan, trace);
-    this.modbuf = plan.modbuf;
-    this.remset = plan.remset;
-    this.arrayRemset = plan.arrayRemset;
+  public G1MatureTraceLocal(Trace trace, G1MatureCollector plan) {
+    super(G1GC.SCAN_MATURE, trace);
   }
 
-  /**
-   * @param trace the global trace class to use
-   * @param plan the state of the generational collector
-   */
-  public G1MatureTraceLocal(Trace trace, GenCollector plan) {
-    super(Gen.SCAN_MATURE, trace);
-    this.modbuf = plan.modbuf;
-    this.remset = plan.remset;
-    this.arrayRemset = plan.arrayRemset;
-  }
-
-  /****************************************************************************
-   *
-   * Object processing and tracing
-   */
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   @Inline
   public boolean isLive(ObjectReference object) {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(!object.isNull());
-    if (Gen.inNursery(object)) {
-      return Gen.nurserySpace.isLive(object);
+    if (G1GC.inNursery(object)) {
+      return G1GC.nurserySpace.isLive(object);
     }
-    return super.isLive(object);
-  }
 
-  /**
-   * Return {@code true} if this object is guaranteed not to move during this
-   * collection (i.e. this object is definitely not an unforwarded
-   * object).
-   *
-   * @param object the object that might move
-   * @return {@code true} if this object is guaranteed not to move during this
-   *         collection.
-   */
-  @Override
-  public boolean willNotMoveInCurrentCollection(ObjectReference object) {
-    if (Gen.inNursery(object))
-      return false;
-    else
-      return super.willNotMoveInCurrentCollection(object);
+    if (G1GC.inSurvivor(object)) {
+      return G1GC.survivorSpace.isLive(object);
+    }
+
+    if(G1GC.inMature(object)) {
+      return G1GC.toSpace().isLive(object);
+    }
+
+    return super.isLive(object);
   }
 
   @Override
@@ -112,16 +55,23 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
     if (object.isNull()) return object;
 
     if(G1GC.inNursery(object))
-      return G1GC.nurserySpace.traceObject(this, object, G1GC.ALLOC_SURVIVOR);
+      return G1GC.nurserySpace.traceObject(this, object, G1GC.ALLOC_MATURE);
 
     if(G1GC.inSurvivor(object))
       return G1GC.survivorSpace.traceObject(this, object, G1GC.ALLOC_MATURE);
 
     if (Space.isInSpace(G1GC.MS0, object))
       return G1GC.matureSpace0.traceObject(this, object, G1GC.ALLOC_MATURE);
+
     if (Space.isInSpace(G1GC.MS1, object))
       return G1GC.matureSpace0.traceObject(this, object, G1GC.ALLOC_MATURE);
 
-    return object;
+    
+    return super.traceObject(object);
+  }
+
+  @Inline
+  private static G1GC global() {
+    return (G1GC) VM.activePlan.global();
   }
 }

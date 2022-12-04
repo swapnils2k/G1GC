@@ -30,10 +30,6 @@ import org.vmmagic.unboxed.*;
 @Uninterruptible
 public final class G1SurvivorTraceLocal extends TraceLocal {
 
-  private final ObjectReferenceDeque modbuf;
-  private final AddressDeque remset;
-  private final AddressPairDeque arrayRemset;
-
   public G1SurvivorTraceLocal(Trace trace, G1SurvivorCollector plan) {
     super(G1GC.SCAN_NURSERY, trace);
   }
@@ -47,6 +43,7 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
       return G1GC.survivorSpace.isLive(object);
     }
 
+    /* During a survivor trace, all objects not in the nursery are considered alive */
     return true;
   }
 
@@ -57,6 +54,7 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
       return G1GC.survivorSpace.traceObject(this, object, G1GC.ALLOC_MATURE);
     }
 
+    processNode(object);
     return object;
   }
 
@@ -66,5 +64,5 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
     
     return !G1GC.inSurvivor(object);
   }
-
+  
 }
