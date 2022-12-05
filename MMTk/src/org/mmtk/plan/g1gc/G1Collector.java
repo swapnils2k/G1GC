@@ -73,6 +73,10 @@ public class G1Collector extends G1SurvivorCollector {
   @Override
   public final TraceLocal getCurrentTrace() {
     TraceLocal currentTrace = super.getCurrentTrace();
-    return currentTrace == null ? matureTrace : currentTrace;
+    if(currentTrace == null) {
+      global().nextGCFullHeap = true;
+      return matureTrace;
+    }
+    return currentTrace;
   }
 }
