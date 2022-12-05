@@ -43,7 +43,7 @@ import org.vmmagic.unboxed.*;
   @Inline
   public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
     if (allocator == G1Nursery.ALLOC_NURSERY) {
-      Log.write("\nPost allocating into survivor");
+      Log.write("\nPost allocating into nursery\n");
       return;
     }
       

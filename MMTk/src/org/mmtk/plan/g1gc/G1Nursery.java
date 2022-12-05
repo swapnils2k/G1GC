@@ -39,27 +39,12 @@ public class G1Nursery extends StopTheWorld {
   public static final int SCAN_NURSERY         = 0;
 
   /* The nursery space is where all new objects are allocated by default */
-  protected static final float SURVIVAL_ESTIMATE = 0.8f; // est yield
-  protected static final float MATURE_FRACTION = 0.5f; // est yield
-  private static final float WORST_CASE_COPY_EXPANSION = 1.5f; // worst case for addition of one word overhead due to address based hashing
   public static final boolean IGNORE_REMSETS = true;
-  public static final boolean USE_NON_HEAP_OBJECT_REFERENCE_WRITE_BARRIER = false;
-  public static final boolean USE_OBJECT_BARRIER_FOR_AASTORE = false; // choose between slot and object barriers
-  public static final boolean USE_OBJECT_BARRIER_FOR_PUTFIELD = false; // choose between slot and object barriers
-  public static final boolean USE_OBJECT_BARRIER = USE_OBJECT_BARRIER_FOR_AASTORE || USE_OBJECT_BARRIER_FOR_PUTFIELD;
 
   /** Fraction of available virtual memory to give to the nursery (if contiguous) */
-  protected static final float NURSERY_VM_FRACTION = 0.2f;
-
-  /** Switch between a contiguous and discontiguous nursery (experimental) */
-  static final boolean USE_DISCONTIGUOUS_NURSERY = false;
-  
+  protected static final float NURSERY_VM_FRACTION = 0.5f;
   private static final VMRequest vmRequest = VMRequest.highFraction(NURSERY_VM_FRACTION);
   public static final CopySpace nurserySpace = new CopySpace("nursery", false, vmRequest);
-
-
-  /* Space object definition */
-  // public static final CopySpace nurserySpace = new CopySpace("nursery", false, VMRequest.discontiguous());
   public static final int NURSERY = nurserySpace.getDescriptor();
   public static final Address NURSERY_START = nurserySpace.getStart();
   
