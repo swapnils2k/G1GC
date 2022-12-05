@@ -57,7 +57,7 @@ public final class G1MatureTraceLocal extends TraceLocal {
     if (object.isNull()) return object;
 
     if(G1.inNursery(object))
-      return G1.nurserySpace.traceObject(this, object, G1.ALLOC_MATURE);
+      return G1.nurserySpace.traceObject(this, object, G1.ALLOC_SURVIVOR);
 
     if(G1.inSurvivor(object))
       return G1.survivorSpace.traceObject(this, object, G1.ALLOC_MATURE);

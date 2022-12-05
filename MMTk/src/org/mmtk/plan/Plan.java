@@ -636,7 +636,7 @@ public abstract class Plan {
         Log.write("                     ");
         Space.printUsagePages();
       }
-      if (Options.verbose.getValue() >= 1) {
+      if (Options.verbose.getValue() >= 5) {
         Space.printVMMap();
       }
     }
@@ -667,7 +667,7 @@ public abstract class Plan {
         Log.write("                     ");
         Space.printUsagePages();
       }
-      if (Options.verbose.getValue() >= 1) {
+      if (Options.verbose.getValue() >= 5) {
         Space.printVMMap();
       }
       Log.write("                     ");
