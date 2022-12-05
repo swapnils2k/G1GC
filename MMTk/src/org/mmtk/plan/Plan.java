@@ -626,17 +626,17 @@ public abstract class Plan {
       Log.write("KB ");
       Log.flush();
     }
-    if (Options.verbose.getValue() > 2) {
+    if (Options.verbose.getValue() >= 1) {
       Log.write("Collection ", Stats.gcCount());
       Log.write(":        ");
       printUsedPages();
       Log.write("  Before Collection: ");
       Space.printUsageMB();
-      if (Options.verbose.getValue() >= 4) {
+      if (Options.verbose.getValue() >= 1) {
         Log.write("                     ");
         Space.printUsagePages();
       }
-      if (Options.verbose.getValue() >= 5) {
+      if (Options.verbose.getValue() >= 1) {
         Space.printVMMap();
       }
     }
@@ -660,14 +660,14 @@ public abstract class Plan {
         Log.writeln(" ms]");
       }
     }
-    if (Options.verbose.getValue() > 2) {
+    if (Options.verbose.getValue() >= 1) {
       Log.write("   After Collection: ");
       Space.printUsageMB();
-      if (Options.verbose.getValue() >= 4) {
+      if (Options.verbose.getValue() >= 1) {
         Log.write("                     ");
         Space.printUsagePages();
       }
-      if (Options.verbose.getValue() >= 5) {
+      if (Options.verbose.getValue() >= 1) {
         Space.printVMMap();
       }
       Log.write("                     ");
