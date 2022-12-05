@@ -20,20 +20,7 @@ import org.mmtk.vm.VM;
 
 import org.vmmagic.pragma.*;
 
-/**
- * This abstract class implements <i>per-collector thread</i>
- * behavior and state for <i>generational copying collectors</i>.<p>
- *
- * Specifically, this class defines nursery collection behavior (through
- * <code>nurseryTrace</code> and the <code>collectionPhase</code> method).
- * Per-collector thread remset consumers are instantiated here (used by
- * sub-classes).
- *
- * @see Gen
- * @see GenMutator
- * @see StopTheWorldCollector
- * @see CollectorContext
- */
+
 @Uninterruptible 
 public abstract class G1NurseryCollector extends StopTheWorldCollector {
 

@@ -39,6 +39,14 @@ import org.vmmagic.unboxed.*;
   }
 
   @Override
+  @Inline
+  public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
+    if (allocator == G1Survivor.ALLOC_SURVIVOR)  
+        return;
+    super.postAlloc(object, typeRef, bytes, allocator);
+  }
+
+  @Override
   public Allocator getAllocatorFromSpace(Space space) {
     if (space == G1Survivor.survivorSpace) 
       return survivor;

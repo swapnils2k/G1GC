@@ -12,8 +12,6 @@
  */
 package org.mmtk.plan.g1gc;
 
-import org.mmtk.plan.generational.Gen;
-import org.mmtk.plan.generational.GenCollector;
 import org.mmtk.plan.Plan;
 import org.mmtk.plan.TraceLocal;
 import org.mmtk.policy.CopyLocal;
@@ -25,24 +23,6 @@ import org.mmtk.vm.VM;
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
 
-/**
- * This class implements <i>per-collector thread</i> behavior and state for
- * the <code>GenCopy</code> two-generational copying collector.<p>
- *
- * Specifically, this class defines semantics specific to the collection of
- * the mature generation (<code>GenCollector</code> defines nursery semantics).
- * In particular the mature space allocator is defined (for collection-time
- * allocation into the mature space), and the mature space per-collector thread
- * collection time semantics are defined.<p>
- *
- * @see GenCopy for a description of the <code>GenCopy</code> algorithm.
- *
- * @see GenCopy
- * @see GenCopyMutator
- * @see GenCollector
- * @see org.mmtk.plan.StopTheWorldCollector
- * @see org.mmtk.plan.CollectorContext
- */
 @Uninterruptible
 public class G1Collector extends G1SurvivorCollector {
 

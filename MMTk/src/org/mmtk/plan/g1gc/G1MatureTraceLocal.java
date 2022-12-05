@@ -24,8 +24,6 @@ import org.vmmagic.pragma.*;
 
 import org.mmtk.policy.Space;
 
-import org.mmtk.plan.generational.Gen;
-
 @Uninterruptible
 public final class G1MatureTraceLocal extends TraceLocal {
 

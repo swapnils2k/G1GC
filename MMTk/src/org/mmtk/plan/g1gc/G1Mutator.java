@@ -12,11 +12,11 @@
  */
 package org.mmtk.plan.g1gc;
 
-import org.mmtk.plan.generational.GenMutator;
 import org.mmtk.policy.CopyLocal;
 import org.mmtk.policy.Space;
 import org.mmtk.utility.alloc.Allocator;
 import org.mmtk.vm.VM;
+import org.mmtk.utility.Log;
 
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
@@ -38,7 +38,12 @@ public class G1Mutator extends G1SurvivorMutator {
 
   @Override
   @Inline
-  public final Address alloc(int bytes, int align, int offset, int allocator, int site) {
+  public Address alloc(int bytes, int align, int offset, int allocator, int site) {
+    Log.write("\nAllocating with allocator id " , allocator);
+    Log.write("\nByte - " , bytes);
+    Log.write("\nAlign - " , align);
+    Log.write("\nSite - " , site);
+
     if (allocator == G1.ALLOC_MATURE) {
       return mature.alloc(bytes, align, offset);
     }
@@ -47,7 +52,16 @@ public class G1Mutator extends G1SurvivorMutator {
   }
 
   @Override
-  public final Allocator getAllocatorFromSpace(Space space) {
+  @Inline
+  public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
+    if (allocator == G1.ALLOC_MATURE)  
+        return;
+        
+    super.postAlloc(object, typeRef, bytes, allocator);
+  }
+  
+  @Override
+  public Allocator getAllocatorFromSpace(Space space) {
     if (space == G1.matureSpace0 || space == G1.matureSpace1) 
       return mature;
 
