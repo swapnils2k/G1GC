@@ -33,7 +33,7 @@ import org.vmmagic.unboxed.*;
   @Inline
   public Address alloc(int bytes, int align, int offset, int allocator, int site) {
     if (allocator == G1Nursery.ALLOC_NURSERY) {
-      Log.write("\nAllocating in nursery with allocator id " , allocator);
+      // Log.write("\nAllocating in nursery with allocator id " , allocator);
       return nursery.alloc(bytes, align, offset);
     }
     return super.alloc(bytes, align, offset, allocator, site);
