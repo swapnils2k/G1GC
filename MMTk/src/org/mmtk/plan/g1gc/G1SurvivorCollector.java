@@ -56,6 +56,7 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
           return;
       }
       
+      
       if (phaseId == G1.CLOSURE) {
           survivorTrace.completeTrace();
           return;
