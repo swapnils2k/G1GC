@@ -19,6 +19,7 @@ import org.mmtk.utility.ForwardingWord;
 import org.mmtk.utility.HeaderByte;
 import org.mmtk.utility.alloc.Allocator;
 import org.mmtk.vm.VM;
+import org.mmtk.utility.Log;
 
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
@@ -37,10 +38,37 @@ public class G1Collector extends G1SurvivorCollector {
   @Override
   @Inline
   public Address allocCopy(ObjectReference original, int bytes, int align, int offset, int allocator) {
-      if(allocator == G1.ALLOC_MATURE)
+      Log.write("\nAlloc copy function invoked for G1Collector with allocator id ", allocator);
+
+      if (allocator == Plan.ALLOC_LOS) {
+        Log.write("\nSince allocator is of type Plan.ALLOC_LOS, we are allocating date to los space");
+        if (VM.VERIFY_ASSERTIONS) 
+            VM.assertions._assert(Allocator.getMaximumAlignedSize(bytes, align) > Plan.MAX_NON_LOS_COPY_BYTES);
+        
+        Log.write("\nAllocating to los space as assertion verified");
+        return los.alloc(bytes, align, offset);
+      } 
+
+      if(allocator == G1.ALLOC_MATURE) {
+          Log.write("\nSince allocator is of type G1.ALLOC_MATURE, we are allocating date to mature space");
+          Log.write("\nChecking Assertion condition bytes <= Plan.MAX_NON_LOS_COPY_BYTES");
+          Log.write(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
+          if (VM.VERIFY_ASSERTIONS) 
+            VM.assertions._assert(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
+            
+          Log.write("\nAllocating to mature space as assertion verified");
           return mature.alloc(bytes, align, offset);
+      }
         
       return super.allocCopy(original, bytes, align, offset, allocator);
+  }
+
+  @Override
+  @Inline
+  public final void postCopy(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
+    ForwardingWord.clearForwardingBits(object);
+    if (allocator == Plan.ALLOC_LOS)
+      Plan.loSpace.initializeHeader(object, false);
   }
 
   @Override

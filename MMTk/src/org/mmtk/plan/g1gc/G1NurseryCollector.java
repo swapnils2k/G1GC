@@ -25,15 +25,17 @@ import org.vmmagic.pragma.*;
 public abstract class G1NurseryCollector extends StopTheWorldCollector {
 
   protected final G1NurseryTraceLocal nurseryTrace;
+  protected final LargeObjectLocal los;
 
   public G1NurseryCollector() {
+    los = new LargeObjectLocal(Plan.loSpace);
     nurseryTrace = new G1NurseryTraceLocal(global().nurseryTrace, this);
   }
 
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
-    if(global().isCurrentGCNursery()) {
+    if(global().isCurrentGCNursery() || global().traceFullHeap()) {
       if (phaseId == G1.PREPARE) {
           nurseryTrace.prepare();
           return;

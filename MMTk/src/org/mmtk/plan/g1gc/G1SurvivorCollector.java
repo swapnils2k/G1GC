@@ -20,6 +20,7 @@ import org.mmtk.utility.deque.*;
 import org.mmtk.vm.VM;
 
 import org.vmmagic.pragma.*;
+import org.mmtk.utility.Log;
 
 import org.vmmagic.unboxed.Address;
 import org.vmmagic.unboxed.ObjectReference;
@@ -39,6 +40,7 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
   @Inline
   public Address allocCopy(ObjectReference original, int bytes, int align, int offset, int allocator) {
       if (allocator == G1Survivor.ALLOC_SURVIVOR) {
+        Log.write("\nSince allocator is of type G1Survivor.ALLOC_SURVIVOR, we are allocating date to survivor space");
         return survivor.alloc(bytes, align, offset);
       }
 
@@ -48,7 +50,7 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
-    if(global().isCurrentGCSurvivor()) {
+    if(global().isCurrentGCSurvivor() || global().traceFullHeap()) {
       if (phaseId == G1.PREPARE) {
           survivorTrace.prepare();
           return;
