@@ -39,7 +39,7 @@ public class G1Survivor extends G1Nursery {
 
 
   /* Space object definition */
-  public static final CopySpace survivorSpace = new CopySpace("survivor", false, VMRequest.discontiguous());
+  public static final CopySpace survivorSpace = new CopySpace("survivor", false, vmRequest);
   public static final int SURVIVOR = survivorSpace.getDescriptor();
   public static final Address SURVIVOR_START = survivorSpace.getStart();
 

@@ -38,10 +38,10 @@ public class G1Collector extends G1SurvivorCollector {
   @Override
   @Inline
   public Address allocCopy(ObjectReference original, int bytes, int align, int offset, int allocator) {
-      Log.write("\nAlloc copy function invoked for G1Collector with allocator id ", allocator);
+      // Log.write("\nAlloc copy function invoked for G1Collector with allocator id ", allocator);
 
       if (allocator == Plan.ALLOC_LOS) {
-        Log.write("\nSince allocator is of type Plan.ALLOC_LOS, we are allocating date to los space");
+        // Log.write("\nSince allocator is of type Plan.ALLOC_LOS, we are allocating date to los space");
         if (VM.VERIFY_ASSERTIONS) 
             VM.assertions._assert(Allocator.getMaximumAlignedSize(bytes, align) > Plan.MAX_NON_LOS_COPY_BYTES);
         
@@ -50,13 +50,13 @@ public class G1Collector extends G1SurvivorCollector {
       } 
 
       if(allocator == G1.ALLOC_MATURE) {
-          Log.write("\nSince allocator is of type G1.ALLOC_MATURE, we are allocating date to mature space");
-          Log.write("\nChecking Assertion condition bytes <= Plan.MAX_NON_LOS_COPY_BYTES ");
-          Log.write(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
+          // Log.write("\nSince allocator is of type G1.ALLOC_MATURE, we are allocating date to mature space");
+          // Log.write("\nChecking Assertion condition bytes <= Plan.MAX_NON_LOS_COPY_BYTES ");
+          // Log.write(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
           if (VM.VERIFY_ASSERTIONS) 
             VM.assertions._assert(bytes <= Plan.MAX_NON_LOS_COPY_BYTES);
             
-          Log.write("\nAllocating to mature space as assertion verified");
+          // Log.write("\nAllocating to mature space as assertion verified");
           return mature.alloc(bytes, align, offset);
       }
         
