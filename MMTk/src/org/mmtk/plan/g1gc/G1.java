@@ -95,6 +95,15 @@ public class G1 extends G1Survivor {
         Log.write(gcFullHeap);
     }
 
+    if(phaseId == RELEASE) {
+      nextGCNursery = false;
+      nextGCSurvivor = false;
+      nextGCFullHeap = false;
+      gcNursery = false;
+      gcSurvivor = false;
+      gcFullHeap = false;
+    }
+
     if (traceFullHeap()) {
       if (phaseId == PREPARE) {
         super.collectionPhase(phaseId);
