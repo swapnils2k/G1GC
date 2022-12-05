@@ -97,6 +97,7 @@ public class G1Survivor extends G1Nursery {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
       if(space == survivorSpace && spaceFull) {
+          Log.write("Since space object is equal to survivor space, setting nextGCSurvivor as true");
           nextGCSurvivor = true;
           return true;
       }

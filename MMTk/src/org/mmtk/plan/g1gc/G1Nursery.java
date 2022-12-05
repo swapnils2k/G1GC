@@ -119,6 +119,7 @@ public class G1Nursery extends StopTheWorld {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
       if(space == nurserySpace && spaceFull) {
+          Log.write("Since space object is equal to nursery space, setting nextGCNursery as true");
           nextGCNursery = true;
           return true;
       }
@@ -134,6 +135,11 @@ public class G1Nursery extends StopTheWorld {
   @Override
   public int getCollectionReserve() {
     return nurserySpace.reservedPages() + super.getCollectionReserve();
+  }
+
+  @Override
+  public int getPagesAvail() {
+    return super.getPagesAvail() >> 1;
   }
   
   @Inline

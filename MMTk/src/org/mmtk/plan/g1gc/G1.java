@@ -117,7 +117,9 @@ public class G1 extends G1Survivor {
 
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
+      Log.write("Invoked collection required");
       if(space == toSpace() && spaceFull) {
+          Log.write("Since space object is equal to mature toSpace, setting nextGCFullHeap as true");
           nextGCFullHeap = true;
           return true;
       }
