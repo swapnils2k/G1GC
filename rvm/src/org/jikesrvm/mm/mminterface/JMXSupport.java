@@ -179,6 +179,7 @@ public class JMXSupport {
         Options.verbose.setValue(1);
       }
     }
+    Options.verbose.setValue(5);
   }
 
   public static long getCollectionCount() {

@@ -13,6 +13,7 @@
 package org.mmtk.plan.g1gc;
 
 import org.mmtk.*;
+import org.mmtk.utility.options.Options;
 import org.mmtk.policy.CopySpace;
 import org.mmtk.policy.Space;
 import org.mmtk.plan.generational.*;
@@ -28,7 +29,6 @@ import org.mmtk.plan.*;
 import org.mmtk.utility.deque.*;
 import org.mmtk.utility.heap.layout.HeapLayout;
 import org.mmtk.utility.Log;
-import org.mmtk.utility.options.Options;
 import org.mmtk.utility.sanitychecker.SanityChecker;
 import org.mmtk.utility.statistics.*;
 
@@ -53,7 +53,6 @@ public class G1 extends G1Survivor {
 
   final Trace matureTrace = new Trace(metaDataSpace);
 
-
   static CopySpace toSpace() {
     return hi ? matureSpace1 : matureSpace0;
   }
@@ -68,6 +67,13 @@ public class G1 extends G1Survivor {
 
   static int fromSpaceDesc() {
     return hi ? MS0 : MS1;
+  }
+
+  @Override
+  public void printPreStats() {
+    if ((Options.verbose.getValue() >= 1) && (gcFullHeap || traceFullHeap()))
+      Log.write("[Full heap]");
+    super.printPreStats();
   }
 
   @Override
@@ -117,9 +123,9 @@ public class G1 extends G1Survivor {
 
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
-      Log.write("Invoked collection required");
+      Log.write("\nInvoked collection required");
       if(space == toSpace() && spaceFull) {
-          Log.write("Since space object is equal to mature toSpace, setting nextGCFullHeap as true");
+          Log.write("\nSince space object is equal to mature toSpace, setting nextGCFullHeap as true");
           nextGCFullHeap = true;
           return true;
       }

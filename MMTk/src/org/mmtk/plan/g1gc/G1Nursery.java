@@ -119,7 +119,7 @@ public class G1Nursery extends StopTheWorld {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
       if(space == nurserySpace && spaceFull) {
-          Log.write("Since space object is equal to nursery space, setting nextGCNursery as true");
+          Log.write("\nSince space object is equal to nursery space, setting nextGCNursery as true");
           nextGCNursery = true;
           return true;
       }
