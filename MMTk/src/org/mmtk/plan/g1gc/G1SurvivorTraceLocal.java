@@ -31,7 +31,7 @@ import org.vmmagic.unboxed.*;
 public final class G1SurvivorTraceLocal extends TraceLocal {
 
   public G1SurvivorTraceLocal(Trace trace, G1SurvivorCollector plan) {
-    super(G1.SCAN_NURSERY, trace);
+    super(G1.SCAN_SURVIVOR, trace);
   }
 
   @Override

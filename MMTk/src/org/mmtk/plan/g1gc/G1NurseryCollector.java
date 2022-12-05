@@ -62,6 +62,7 @@ public abstract class G1NurseryCollector extends StopTheWorldCollector {
   public TraceLocal getCurrentTrace() {
       if(global().isCurrentGCNursery())
         return nurseryTrace;
-      return super.getCurrentTrace();
+
+      return null;
   }
 }

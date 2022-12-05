@@ -73,6 +73,22 @@ public class G1 extends G1Survivor {
   @Override
   @Inline
   public void collectionPhase(short phaseId) {
+    Log.write("\nCollection is invoked for G1GC");
+    if(phaseId == PREPARE) {
+        Log.write("\nnextGCNursery = ");
+        Log.write(nextGCNursery);
+        Log.write("\nnextGCSurvivor = ");
+        Log.write(nextGCSurvivor);
+        Log.write("\nnextGCFullHeap = ");
+        Log.write(nextGCFullHeap);
+        Log.write("\ngcNursery = ");
+        Log.write(gcNursery);
+        Log.write("\ngcSurvivor = ");
+        Log.write(gcSurvivor);
+        Log.write("\ngcFullHeap = ");
+        Log.write(gcFullHeap);
+    }
+
     if (traceFullHeap()) {
       if (phaseId == PREPARE) {
         super.collectionPhase(phaseId);

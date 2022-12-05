@@ -11,7 +11,7 @@ public class G1Constraints extends StopTheWorldConstraints {
 
   @Override
   public boolean generational() {
-    return true;
+    return false;
   }
   
   @Override
@@ -46,6 +46,11 @@ public class G1Constraints extends StopTheWorldConstraints {
       fracAvailable = org.mmtk.utility.Constants.MAX_INT;
     }
     return  (int)fracAvailable;  
+  }
+
+  @Override
+  public int maxNumGCThreads() {
+    return 10;
   }
 
 }
