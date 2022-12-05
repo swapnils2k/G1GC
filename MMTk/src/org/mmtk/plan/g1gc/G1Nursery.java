@@ -153,16 +153,16 @@ public class G1Nursery extends StopTheWorld {
   }
 
   public final boolean traceFullHeap() {
-    return gcFullHeap;
+    return (!gcNursery && !gcSurvivor) || gcFullHeap;
   }
 
   @Override
   public final boolean isCurrentGCNursery() {
-    return gcNursery;
+    return gcNursery && !gcFullHeap;
   }
 
   public final boolean isCurrentGCSurvivor() {
-    return gcSurvivor;
+    return gcSurvivor && !gcFullHeap;
   }
 
   @Override
