@@ -13,6 +13,7 @@
 package org.mmtk.plan.g1gc;
 
 import org.mmtk.plan.*;
+import org.mmtk.utility.Log;
 import org.mmtk.policy.CopyLocal;
 import org.mmtk.policy.Space;
 import org.mmtk.utility.HeaderByte;
@@ -33,9 +34,20 @@ import org.vmmagic.unboxed.*;
   @Inline
   public Address alloc(int bytes, int align, int offset, int allocator, int site) {
     if (allocator == G1Survivor.ALLOC_SURVIVOR) {
+      // Log.write("\nAllocating into survivor");
       return survivor.alloc(bytes, align, offset);
     }
     return super.alloc(bytes, align, offset, allocator, site);
+  }
+
+  @Override
+  @Inline
+  public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
+    if (allocator == G1Survivor.ALLOC_SURVIVOR) { 
+        // Log.write("\nPost allocating into survivor");
+        return;
+    }
+    super.postAlloc(object, typeRef, bytes, allocator);
   }
 
   @Override
@@ -49,7 +61,7 @@ import org.vmmagic.unboxed.*;
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
-    if (phaseId == G1GC.PREPARE) {
+    if (phaseId == G1.PREPARE) {
       if(global().isCurrentGCSurvivor()){
         survivor.reset();
         return;
@@ -66,7 +78,7 @@ import org.vmmagic.unboxed.*;
   }
 
   @Inline
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 }

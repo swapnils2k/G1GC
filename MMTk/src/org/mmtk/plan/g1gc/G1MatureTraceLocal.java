@@ -22,27 +22,29 @@ import org.mmtk.vm.VM;
 import org.vmmagic.unboxed.*;
 import org.vmmagic.pragma.*;
 
-@Uninterruptible
-public abstract class G1MatureTraceLocal extends TraceLocal {
+import org.mmtk.policy.Space;
 
-  public G1MatureTraceLocal(Trace trace, G1MatureCollector plan) {
-    super(G1GC.SCAN_MATURE, trace);
+@Uninterruptible
+public final class G1MatureTraceLocal extends TraceLocal {
+
+  public G1MatureTraceLocal(Trace trace, G1Collector plan) {
+    super(G1.SCAN_MATURE, trace);
   }
 
   @Override
   @Inline
   public boolean isLive(ObjectReference object) {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(!object.isNull());
-    if (G1GC.inNursery(object)) {
-      return G1GC.nurserySpace.isLive(object);
+    if (G1.inNursery(object)) {
+      return G1.nurserySpace.isLive(object);
     }
 
-    if (G1GC.inSurvivor(object)) {
-      return G1GC.survivorSpace.isLive(object);
+    if (G1.inSurvivor(object)) {
+      return G1.survivorSpace.isLive(object);
     }
 
-    if(G1GC.inMature(object)) {
-      return G1GC.toSpace().isLive(object);
+    if(G1.inMature(object)) {
+      return G1.toSpace().isLive(object);
     }
 
     return super.isLive(object);
@@ -54,24 +56,24 @@ public abstract class G1MatureTraceLocal extends TraceLocal {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
     if (object.isNull()) return object;
 
-    if(G1GC.inNursery(object))
-      return G1GC.nurserySpace.traceObject(this, object, G1GC.ALLOC_MATURE);
+    if(G1.inNursery(object))
+      return G1.nurserySpace.traceObject(this, object, G1.ALLOC_SURVIVOR);
 
-    if(G1GC.inSurvivor(object))
-      return G1GC.survivorSpace.traceObject(this, object, G1GC.ALLOC_MATURE);
+    if(G1.inSurvivor(object))
+      return G1.survivorSpace.traceObject(this, object, G1.ALLOC_MATURE);
 
-    if (Space.isInSpace(G1GC.MS0, object))
-      return G1GC.matureSpace0.traceObject(this, object, G1GC.ALLOC_MATURE);
+    if (Space.isInSpace(G1.MS0, object))
+      return G1.matureSpace0.traceObject(this, object, G1.ALLOC_MATURE);
 
-    if (Space.isInSpace(G1GC.MS1, object))
-      return G1GC.matureSpace0.traceObject(this, object, G1GC.ALLOC_MATURE);
+    if (Space.isInSpace(G1.MS1, object))
+      return G1.matureSpace0.traceObject(this, object, G1.ALLOC_MATURE);
 
     
     return super.traceObject(object);
   }
 
   @Inline
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 }

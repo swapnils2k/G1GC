@@ -26,6 +26,7 @@ import org.mmtk.utility.Conversions;
 import org.mmtk.utility.Log;
 import org.mmtk.utility.gcspy.drivers.LinearSpaceDriver;
 import org.mmtk.vm.VM;
+import org.mmtk.utility.Log;
 import org.vmmagic.pragma.Inline;
 import org.vmmagic.pragma.NoInline;
 import org.vmmagic.pragma.Uninterruptible;
@@ -177,13 +178,18 @@ import org.vmmagic.unboxed.Word;
    */
   @Inline
   public final Address alloc(int bytes, int align, int offset) {
+    Log.write("\nInside Bump Pointer Allocator");
     Address start = alignAllocationNoFill(cursor, align, offset);
     Address end = start.plus(bytes);
-    if (end.GT(internalLimit))
+    if (end.GT(internalLimit)){
+      Log.write("\nTrying to allocate slow");
       return allocSlow(start, end, align, offset);
+    }
     fillAlignmentGap(cursor, start);
     cursor = end;
     end.plus(SIZE_OF_TWO_X86_CACHE_LINES_IN_BYTES).prefetch();
+    Log.write("\nAllocation Done with start address - ", start);
+    Log.write("\n");
     return start;
   }
 

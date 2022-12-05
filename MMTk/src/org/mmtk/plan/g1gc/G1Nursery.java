@@ -38,8 +38,13 @@ public class G1Nursery extends StopTheWorld {
   public static final int ALLOC_NURSERY        = ALLOC_DEFAULT;
   public static final int SCAN_NURSERY         = 0;
 
-  /* Space object definition */
-  public static final CopySpace nurserySpace = new CopySpace("nursery", false, VMRequest.discontiguous());
+  /* The nursery space is where all new objects are allocated by default */
+  public static final boolean IGNORE_REMSETS = true;
+
+  /** Fraction of available virtual memory to give to the nursery (if contiguous) */
+  protected static final float NURSERY_VM_FRACTION = 0.3f;
+  public static final VMRequest vmRequest = VMRequest.highFraction(NURSERY_VM_FRACTION);
+  public static final CopySpace nurserySpace = new CopySpace("nursery", false, vmRequest);
   public static final int NURSERY = nurserySpace.getDescriptor();
   public static final Address NURSERY_START = nurserySpace.getStart();
   
@@ -53,6 +58,12 @@ public class G1Nursery extends StopTheWorld {
   public boolean gcNursery;
   public boolean gcSurvivor;
   public boolean gcFullHeap;
+
+  public G1Nursery() {
+    Options.noReferenceTypes.setDefaultValue(true);
+    Options.noFinalizer.setDefaultValue(true);
+
+  }
 
   @Override
   @NoInline
@@ -114,6 +125,7 @@ public class G1Nursery extends StopTheWorld {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
       if(space == nurserySpace && spaceFull) {
+          Log.write("\nSince space object is equal to nursery space, setting nextGCNursery as true");
           nextGCNursery = true;
           return true;
       }
@@ -130,6 +142,11 @@ public class G1Nursery extends StopTheWorld {
   public int getCollectionReserve() {
     return nurserySpace.reservedPages() + super.getCollectionReserve();
   }
+
+  @Override
+  public int getPagesAvail() {
+    return super.getPagesAvail() >> 1;
+  }
   
   @Inline
   static boolean inNursery(Address addr) {
@@ -142,16 +159,16 @@ public class G1Nursery extends StopTheWorld {
   }
 
   public final boolean traceFullHeap() {
-    return gcFullHeap;
+    return (!gcNursery && !gcSurvivor) || gcFullHeap;
   }
 
   @Override
   public final boolean isCurrentGCNursery() {
-    return gcNursery;
+    return gcNursery && !gcFullHeap;
   }
 
   public final boolean isCurrentGCSurvivor() {
-    return gcSurvivor;
+    return gcSurvivor && !gcFullHeap;
   }
 
   @Override

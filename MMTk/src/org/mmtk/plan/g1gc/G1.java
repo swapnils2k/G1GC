@@ -13,6 +13,7 @@
 package org.mmtk.plan.g1gc;
 
 import org.mmtk.*;
+import org.mmtk.utility.options.Options;
 import org.mmtk.policy.CopySpace;
 import org.mmtk.policy.Space;
 import org.mmtk.plan.generational.*;
@@ -21,12 +22,13 @@ import org.mmtk.plan.TransitiveClosure;
 import org.mmtk.utility.heap.VMRequest;
 import org.mmtk.vm.VM;
 
+import org.vmmagic.unboxed.Address;
+import org.vmmagic.unboxed.ObjectReference;
 
 import org.mmtk.plan.*;
 import org.mmtk.utility.deque.*;
 import org.mmtk.utility.heap.layout.HeapLayout;
 import org.mmtk.utility.Log;
-import org.mmtk.utility.options.Options;
 import org.mmtk.utility.sanitychecker.SanityChecker;
 import org.mmtk.utility.statistics.*;
 
@@ -34,7 +36,7 @@ import org.mmtk.utility.statistics.*;
 import org.vmmagic.pragma.*;
 
 @Uninterruptible 
-public class G1GC extends G1Survivor {
+public class G1 extends G1Survivor {
 
   public static final int ALLOC_MATURE         = StopTheWorld.ALLOCATORS + 2;
   public static final int SCAN_MATURE          = 2;
@@ -42,7 +44,7 @@ public class G1GC extends G1Survivor {
   static boolean hi = false;
 
   public static final CopySpace matureSpace0 = new CopySpace("matureSpace0", false, VMRequest.discontiguous());
-  static static final int MS0 = matureSpace0.getDescriptor();
+  public static final int MS0 = matureSpace0.getDescriptor();
   public static final Address MATURE0_START = matureSpace0.getStart();
 
   public static final CopySpace matureSpace1 = new CopySpace("matureSpace1", true, VMRequest.discontiguous());
@@ -50,7 +52,6 @@ public class G1GC extends G1Survivor {
   public static final Address MATURE1_START = matureSpace1.getStart();
 
   final Trace matureTrace = new Trace(metaDataSpace);
-
 
   static CopySpace toSpace() {
     return hi ? matureSpace1 : matureSpace0;
@@ -69,8 +70,40 @@ public class G1GC extends G1Survivor {
   }
 
   @Override
+  public void printPreStats() {
+    if ((Options.verbose.getValue() >= 1) && (gcFullHeap || traceFullHeap()))
+      Log.write("[Full heap]");
+    super.printPreStats();
+  }
+
+  @Override
   @Inline
   public void collectionPhase(short phaseId) {
+    Log.write("\nCollection is invoked for G1GC");
+    if(phaseId == PREPARE) {
+        Log.write("\nnextGCNursery = ");
+        Log.write(nextGCNursery);
+        Log.write("\nnextGCSurvivor = ");
+        Log.write(nextGCSurvivor);
+        Log.write("\nnextGCFullHeap = ");
+        Log.write(nextGCFullHeap);
+        Log.write("\ngcNursery = ");
+        Log.write(gcNursery);
+        Log.write("\ngcSurvivor = ");
+        Log.write(gcSurvivor);
+        Log.write("\ngcFullHeap = ");
+        Log.write(gcFullHeap);
+    }
+
+    if(phaseId == RELEASE) {
+      nextGCNursery = false;
+      nextGCSurvivor = false;
+      nextGCFullHeap = false;
+      gcNursery = false;
+      gcSurvivor = false;
+      gcFullHeap = false;
+    }
+
     if (traceFullHeap()) {
       if (phaseId == PREPARE) {
         super.collectionPhase(phaseId);
@@ -99,7 +132,9 @@ public class G1GC extends G1Survivor {
 
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
+      Log.write("\nInvoked collection required");
       if(space == toSpace() && spaceFull) {
+          Log.write("\nSince space object is equal to mature toSpace, setting nextGCFullHeap as true");
           nextGCFullHeap = true;
           return true;
       }
@@ -130,7 +165,7 @@ public class G1GC extends G1Survivor {
 
   @Override
   @Interruptible
-  protected void registerSpecializedMethods() {
+  public void registerSpecializedMethods() {
     TransitiveClosure.registerSpecializedScan(SCAN_MATURE, G1MatureTraceLocal.class);
     super.registerSpecializedMethods();
   }

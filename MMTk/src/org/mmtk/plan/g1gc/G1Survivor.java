@@ -39,7 +39,7 @@ public class G1Survivor extends G1Nursery {
 
 
   /* Space object definition */
-  public static final CopySpace survivorSpace = new CopySpace("survivor", false, VMRequest.discontiguous());
+  public static final CopySpace survivorSpace = new CopySpace("survivor", false, vmRequest);
   public static final int SURVIVOR = survivorSpace.getDescriptor();
   public static final Address SURVIVOR_START = survivorSpace.getStart();
 
@@ -76,12 +76,12 @@ public class G1Survivor extends G1Nursery {
 
     if (phaseId == RELEASE) {
       if(isCurrentGCSurvivor()) {
-          survivorSpace.release();
+          // survivorSpace.release();
           survivorTrace.release();
       }
 
       if(traceFullHeap()) {
-          survivorSpace.release();
+          // survivorSpace.release();
           survivorTrace.release();
           super.collectionPhase(phaseId);
       }
@@ -97,6 +97,7 @@ public class G1Survivor extends G1Nursery {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
       if(space == survivorSpace && spaceFull) {
+          Log.write("\nSince space object is equal to survivor space, setting nextGCSurvivor as true");
           nextGCSurvivor = true;
           return true;
       }
@@ -132,3 +133,4 @@ public class G1Survivor extends G1Nursery {
   }
 
 }
+

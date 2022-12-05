@@ -134,7 +134,7 @@ public abstract class Simple extends Plan {
       Phase.scheduleCollector  (CLOSURE),
       Phase.schedulePlaceholder(WEAK_TRACK_REFS),
       Phase.scheduleCollector  (PHANTOM_REFS));
-
+ 
   /**
    * Ensure that all references in the system are correct.
    */

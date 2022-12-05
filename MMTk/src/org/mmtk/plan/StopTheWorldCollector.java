@@ -12,6 +12,7 @@
  */
 package org.mmtk.plan;
 
+import org.mmtk.utility.Log;
 import org.mmtk.vm.VM;
 import org.vmmagic.pragma.*;
 
@@ -37,6 +38,7 @@ public abstract class StopTheWorldCollector extends SimpleCollector {
   /** Perform garbage collection */
   @Override
   public void collect() {
+    Log.write("\nGarbage collection invoked");
     Phase.beginNewPhaseStack(Phase.scheduleComplex(global().collection));
   }
 

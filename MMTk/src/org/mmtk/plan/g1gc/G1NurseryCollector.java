@@ -20,44 +20,33 @@ import org.mmtk.vm.VM;
 
 import org.vmmagic.pragma.*;
 
-/**
- * This abstract class implements <i>per-collector thread</i>
- * behavior and state for <i>generational copying collectors</i>.<p>
- *
- * Specifically, this class defines nursery collection behavior (through
- * <code>nurseryTrace</code> and the <code>collectionPhase</code> method).
- * Per-collector thread remset consumers are instantiated here (used by
- * sub-classes).
- *
- * @see Gen
- * @see GenMutator
- * @see StopTheWorldCollector
- * @see CollectorContext
- */
+
 @Uninterruptible 
 public abstract class G1NurseryCollector extends StopTheWorldCollector {
 
   protected final G1NurseryTraceLocal nurseryTrace;
+  protected final LargeObjectLocal los;
 
   public G1NurseryCollector() {
+    los = new LargeObjectLocal(Plan.loSpace);
     nurseryTrace = new G1NurseryTraceLocal(global().nurseryTrace, this);
   }
 
   @Override
   @NoInline
   public void collectionPhase(short phaseId, boolean primary) {
-    if(global().isCurrentGCNursery()) {
-      if (phaseId == G1GC.PREPARE) {
+    if(global().isCurrentGCNursery() || global().traceFullHeap()) {
+      if (phaseId == G1.PREPARE) {
           nurseryTrace.prepare();
           return;
       }
 
-      if (phaseId == G1GC.CLOSURE) {
+      if (phaseId == G1.CLOSURE) {
           nurseryTrace.completeTrace();
           return;
       }
 
-      if (phaseId == G1GC.RELEASE) {
+      if (phaseId == G1.RELEASE) {
           nurseryTrace.release();
           return;
       }
@@ -67,13 +56,15 @@ public abstract class G1NurseryCollector extends StopTheWorldCollector {
   }
 
   @Inline
-  private static G1GC global() {
-    return (G1GC) VM.activePlan.global();
+  private static G1 global() {
+    return (G1) VM.activePlan.global();
   }
 
   @Override
-  public final TraceLocal getCurrentTrace() {
+  public TraceLocal getCurrentTrace() {
       if(global().isCurrentGCNursery())
         return nurseryTrace;
+
+      return null;
   }
 }
