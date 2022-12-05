@@ -73,6 +73,9 @@ public class G1Collector extends G1SurvivorCollector {
 
   @Override
   public void collectionPhase(short phaseId, boolean primary) {
+    Log.write("\nG1 Collector Processing phase id ", phaseId);
+    Log.write(" . Value of primary - ");
+    Log.write(primary);
     if (global().traceFullHeap()) {
       if (phaseId == G1.PREPARE) {
           matureTrace.prepare();
@@ -92,6 +95,7 @@ public class G1Collector extends G1SurvivorCollector {
     }
 
     super.collectionPhase(phaseId, primary);
+    Log.write("\nG1 Collector Done Processing phase id ", phaseId);
   }
 
   private static G1 global() {
