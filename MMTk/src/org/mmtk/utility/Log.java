@@ -37,7 +37,7 @@ public class Log {
    * This needs to be large because Jikes RVM's implementation of Lock.java
    * logs a lot of information when there is potential GC deadlock.
    */
-  private static final int MESSAGE_BUFFER_SIZE = 30000;
+  private static final int MESSAGE_BUFFER_SIZE = 300000;
 
   /** message added when the write buffer has overflown */
   private static final String OVERFLOW_MESSAGE = "... WARNING: Text truncated.\n";
