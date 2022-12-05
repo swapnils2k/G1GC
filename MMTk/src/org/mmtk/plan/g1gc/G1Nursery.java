@@ -59,6 +59,11 @@ public class G1Nursery extends StopTheWorld {
   public boolean gcSurvivor;
   public boolean gcFullHeap;
 
+  // public G1Nursery() {
+  //   Options.noReferenceTypes.setDefaultValue(true);
+  //   Options.noFinalizer.setDefaultValue(true);
+  // }
+
   @Override
   @NoInline
   public void collectionPhase(short phaseId) {

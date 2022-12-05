@@ -52,6 +52,14 @@ public abstract class SimpleCollector extends ParallelCollector {
   @Override
   @Inline
   public void collectionPhase(short phaseId, boolean primary) {
+    Log.write("\nCurrent collection id - ", phaseId);
+    Log.write("\nPrimary - ");
+    Log.write(primary);
+    Log.write("\nisCurrentGCNursery() - ");
+    Log.write(global().isCurrentGCNursery());
+
+    // Log.write("isCurrentGCSurvivor() - ");
+    // Log.write(global().isCurrentGCSurvivor());
     if (phaseId == Simple.PREPARE) {
       // Nothing to do
       return;
