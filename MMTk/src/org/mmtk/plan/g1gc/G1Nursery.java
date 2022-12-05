@@ -42,7 +42,7 @@ public class G1Nursery extends StopTheWorld {
   public static final boolean IGNORE_REMSETS = true;
 
   /** Fraction of available virtual memory to give to the nursery (if contiguous) */
-  protected static final float NURSERY_VM_FRACTION = 0.2f;
+  protected static final float NURSERY_VM_FRACTION = 0.5f;
   public static final VMRequest vmRequest = VMRequest.highFraction(NURSERY_VM_FRACTION);
   public static final CopySpace nurserySpace = new CopySpace("nursery", false, vmRequest);
   public static final int NURSERY = nurserySpace.getDescriptor();
