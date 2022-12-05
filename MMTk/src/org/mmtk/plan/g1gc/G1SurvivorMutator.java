@@ -13,6 +13,7 @@
 package org.mmtk.plan.g1gc;
 
 import org.mmtk.plan.*;
+import org.mmtk.utility.Log;
 import org.mmtk.policy.CopyLocal;
 import org.mmtk.policy.Space;
 import org.mmtk.utility.HeaderByte;
@@ -33,6 +34,7 @@ import org.vmmagic.unboxed.*;
   @Inline
   public Address alloc(int bytes, int align, int offset, int allocator, int site) {
     if (allocator == G1Survivor.ALLOC_SURVIVOR) {
+      Log.write("\nAllocating into survivor");
       return survivor.alloc(bytes, align, offset);
     }
     return super.alloc(bytes, align, offset, allocator, site);
@@ -41,8 +43,10 @@ import org.vmmagic.unboxed.*;
   @Override
   @Inline
   public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
-    if (allocator == G1Survivor.ALLOC_SURVIVOR)  
+    if (allocator == G1Survivor.ALLOC_SURVIVOR) { 
+        Log.write("\nPost allocating into survivor");
         return;
+    }
     super.postAlloc(object, typeRef, bytes, allocator);
   }
 

@@ -42,8 +42,10 @@ import org.vmmagic.unboxed.*;
   @Override
   @Inline
   public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
-    if (allocator == G1Nursery.ALLOC_NURSERY)  
+    if (allocator == G1Nursery.ALLOC_NURSERY) {
+      Log.write("\nPost allocating into survivor");
       return;
+    }
       
     super.postAlloc(object, typeRef, bytes, allocator);
   }

@@ -45,6 +45,7 @@ public class G1Mutator extends G1SurvivorMutator {
     Log.write("\nSite - " , site);
 
     if (allocator == G1.ALLOC_MATURE) {
+      Log.write("\nAllocating into mature");
       return mature.alloc(bytes, align, offset);
     }
 
@@ -54,8 +55,12 @@ public class G1Mutator extends G1SurvivorMutator {
   @Override
   @Inline
   public void postAlloc(ObjectReference object, ObjectReference typeRef, int bytes, int allocator) {
-    if (allocator == G1.ALLOC_MATURE)  
+    Log.write("\nPost Allocating with allocator id " , allocator);
+    Log.write("\nByte - " , bytes);
+    if (allocator == G1.ALLOC_MATURE) { 
+        Log.write("\nPost allocating into mature");
         return;
+    }
         
     super.postAlloc(object, typeRef, bytes, allocator);
   }
