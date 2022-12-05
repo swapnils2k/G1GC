@@ -3,13 +3,9 @@ public class HelloWorld {
 
     public static void main (String[] args) {
         // System.out.println("Hello World");
-        int counter = 0;
-        while(true) {
-            Person a = new Person(1);
-            // System.out.println(a.getX());
-            counter++;
-            // System.out.println(counter);
-        }
+        List<Person> p= new ArrayList<Person>();
+        while(true) 
+            p.add(new Person(1));
     }
 
 

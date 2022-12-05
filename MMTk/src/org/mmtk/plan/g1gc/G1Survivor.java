@@ -76,12 +76,12 @@ public class G1Survivor extends G1Nursery {
 
     if (phaseId == RELEASE) {
       if(isCurrentGCSurvivor()) {
-          survivorSpace.release();
+          // survivorSpace.release();
           survivorTrace.release();
       }
 
       if(traceFullHeap()) {
-          survivorSpace.release();
+          // survivorSpace.release();
           survivorTrace.release();
           super.collectionPhase(phaseId);
       }
