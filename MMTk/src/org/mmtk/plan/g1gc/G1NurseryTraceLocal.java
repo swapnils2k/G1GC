@@ -19,10 +19,9 @@ import org.mmtk.plan.Trace;
 import org.mmtk.utility.HeaderByte;
 import org.mmtk.utility.deque.*;
 import org.mmtk.vm.VM;
-import org.mmtk.harness.vm.ObjectModel;
-
 import org.vmmagic.pragma.*;
 import org.vmmagic.unboxed.*;
+import org.mmtk.utility.Log;
 
 /**
  * This class implements the core functionality for a transitive
@@ -54,11 +53,6 @@ public final class G1NurseryTraceLocal extends TraceLocal {
     if (G1.inNursery(object)) {
       return G1.nurserySpace.traceObject(this, object, G1.ALLOC_SURVIVOR);
     }
-
-    int refs = ObjectModel.getRefs(object);
-    if(!object.isNull() && refs != 0)
-      processNode(object);
-
     return object;
   }
 
