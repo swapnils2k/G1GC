@@ -709,6 +709,7 @@ public abstract class Plan {
     // Mark this as a user triggered collection
     userTriggeredCollection = true;
     // Request the collection
+    Log.write("\nTriggering controller collector request for handleUserCollectionRequest case");
     controlCollectorContext.request();
     // Wait for the collection to complete
     VM.collection.blockForGC();
@@ -721,6 +722,7 @@ public abstract class Plan {
     // Mark this as a user triggered collection
     internalTriggeredCollection = lastInternalTriggeredCollection = true;
     // Request the collection
+    Log.write("\nTriggering GC as a part of internal collection request");
     controlCollectorContext.request();
   }
 
@@ -971,11 +973,13 @@ public abstract class Plan {
         return false;
       }
       logPoll(space, "Triggering collection");
+
       controlCollectorContext.request();
       return true;
     }
 
     if (concurrentCollectionRequired()) {
+      Log.write("Inside concurrent collection required of poll method : Plan class");
       if (space == metaDataSpace) {
         logPoll(space, "Triggering async concurrent collection");
         triggerInternalCollectionRequest();
@@ -991,7 +995,7 @@ public abstract class Plan {
   }
 
   protected void logPoll(Space space, String message) {
-    if (Options.verbose.getValue() >= 5) {
+    if (Options.verbose.getValue() >= 1) {
       Log.write("  [POLL] ");
       Log.write(space.getName());
       Log.write(": ");
@@ -1010,16 +1014,19 @@ public abstract class Plan {
   protected boolean collectionRequired(boolean spaceFull, Space space) {
     boolean stressForceGC = stressTestGCRequired();
     boolean heapFull = getPagesReserved() > getTotalPages();
-    Log.write("\nChecking stressForceGC = ");
-    Log.write(stressForceGC);
-    Log.write("\nReserved Pages = ");
-    Log.write(getPagesReserved());
-    Log.write("\nTota Pages = ");
-    Log.write(getTotalPages());
-    Log.write("\nSpace Full = ");
-    Log.write(spaceFull);
-    Log.write("\nHeap Full = ");
-    Log.write(heapFull);
+    if(spaceFull || stressForceGC || heapFull) {
+      Log.write("\nChecking stressForceGC = ");
+      Log.write(stressForceGC);
+      Log.write("\nReserved Pages = ");
+      Log.write(getPagesReserved());
+      Log.write("\nTota Pages = ");
+      Log.write(getTotalPages());
+      Log.write("\nSpace Full = ");
+      Log.write(spaceFull);
+      Log.write("\nHeap Full = ");
+      Log.write(heapFull);
+    }
+    
     return spaceFull || stressForceGC || heapFull;
   }
 

@@ -14,6 +14,7 @@ package org.mmtk.plan.g1gc;
 
 import org.mmtk.plan.*;
 import org.mmtk.policy.LargeObjectLocal;
+import org.mmtk.utility.Log;
 import org.mmtk.utility.deque.*;
 
 import org.mmtk.vm.VM;
@@ -62,8 +63,10 @@ public abstract class G1NurseryCollector extends StopTheWorldCollector {
 
   @Override
   public TraceLocal getCurrentTrace() {
-      if(global().isCurrentGCNursery())
+      if(global().isCurrentGCNursery()) {
+        Log.write("\nReturning nursery trace");
         return nurseryTrace;
+      }
 
       return null;
   }

@@ -56,11 +56,11 @@ public final class G1MatureTraceLocal extends TraceLocal {
     if (VM.VERIFY_ASSERTIONS) VM.assertions._assert(global().traceFullHeap());
     if (object.isNull()) return object;
 
-    if(G1.inNursery(object))
-      return G1.nurserySpace.traceObject(this, object, G1.ALLOC_SURVIVOR);
-
     if(G1.inSurvivor(object))
       return G1.survivorSpace.traceObject(this, object, G1.ALLOC_MATURE);
+
+    if(G1.inNursery(object))
+      return G1.nurserySpace.traceObject(this, object, G1.ALLOC_SURVIVOR);
 
     if (Space.isInSpace(G1.MS0, object))
       return G1.matureSpace0.traceObject(this, object, G1.ALLOC_MATURE);
@@ -68,7 +68,6 @@ public final class G1MatureTraceLocal extends TraceLocal {
     if (Space.isInSpace(G1.MS1, object))
       return G1.matureSpace0.traceObject(this, object, G1.ALLOC_MATURE);
 
-    
     return super.traceObject(object);
   }
 

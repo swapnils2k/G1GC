@@ -42,7 +42,8 @@ public class G1Nursery extends StopTheWorld {
   public static final boolean IGNORE_REMSETS = true;
 
   /** Fraction of available virtual memory to give to the nursery (if contiguous) */
-  protected static final float NURSERY_VM_FRACTION = 0.3f;
+  protected static final float NURSERY_VM_FRACTION = 0.15f;
+
   public static final VMRequest vmRequest = VMRequest.highFraction(NURSERY_VM_FRACTION);
   public static final CopySpace nurserySpace = new CopySpace("nursery", false, vmRequest);
   public static final int NURSERY = nurserySpace.getDescriptor();
@@ -62,17 +63,18 @@ public class G1Nursery extends StopTheWorld {
   public G1Nursery() {
     Options.noReferenceTypes.setDefaultValue(true);
     Options.noFinalizer.setDefaultValue(true);
-
+    Options.variableSizeHeap.setValue(false);
   }
 
   @Override
   @NoInline
   public void collectionPhase(short phaseId) {
     if (phaseId == SET_COLLECTION_KIND) {
+      Log.write("\nCollection is invoked for G1GC");
       super.collectionPhase(phaseId);
       gcNursery = nextGCNursery;
       gcSurvivor = nextGCSurvivor;
-      gcFullHeap = nextGCFullHeap;
+      gcFullHeap = requiresFullHeapCollection();
       return;
     }
 
@@ -122,25 +124,44 @@ public class G1Nursery extends StopTheWorld {
     super.collectionPhase(phaseId);
   }
 
+  protected boolean requiresFullHeapCollection() {
+    if (userTriggeredCollection && Options.fullHeapSystemGC.getValue()) {
+      return true;
+    }
+
+    if (nextGCFullHeap || collectionAttempt > 1) {
+      return true;
+    }
+
+    return false;
+  }
+
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
-      if(space == nurserySpace && spaceFull) {
-          Log.write("\nSince space object is equal to nursery space, setting nextGCNursery as true");
-          nextGCNursery = true;
-          return true;
-      }
+    int availableNurseryPages = Options.nurserySize.getMaxNursery() - nurserySpace.reservedPages();
+    Log.write("\nMaximum nursery size - ");
+    Log.write(Options.nurserySize.getMaxNursery());
+    Log.write("\nNursery reservedPages - ");
+    Log.write(nurserySpace.reservedPages());
+    
+    if (availableNurseryPages <= 0) {
+      nextGCNursery = true;
+      Log.write("\nSince availableNurseryPages < 0 , setting nextGCNursery as true");
+      return true;
+    }
 
-      return super.collectionRequired(spaceFull, space);
+    if(space == nurserySpace && spaceFull) {
+        Log.write("\nSince space object is equal to nursery space, setting nextGCNursery as true");
+        nextGCNursery = true;
+        return true;
+    }
+
+    return super.collectionRequired(spaceFull, space);
   }
  
   @Override
   public int getPagesUsed() {
     return (nurserySpace.reservedPages() + super.getPagesUsed());
-  }
-
-  @Override
-  public int getCollectionReserve() {
-    return nurserySpace.reservedPages() + super.getCollectionReserve();
   }
 
   @Override

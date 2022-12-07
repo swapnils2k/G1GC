@@ -109,11 +109,6 @@ public class G1Survivor extends G1Nursery {
   public int getPagesUsed() {
     return (survivorSpace.reservedPages() + super.getPagesUsed());
   }
-
-  @Override
-  public int getCollectionReserve() {
-    return survivorSpace.reservedPages() + super.getCollectionReserve();
-  }
   
   @Inline
   static boolean inSurvivor(Address addr) {

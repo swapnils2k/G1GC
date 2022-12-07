@@ -178,7 +178,7 @@ import org.vmmagic.unboxed.*;
     if (newSize.NE(oldSize) && newSize.GT(Extent.zero())) {
       // Heap size is going to change
       currentHeapSize = newSize;
-      if (Options.verbose.getValue() >= 2) {
+      if (Options.verbose.getValue() >= 1) {
         Log.write("GC Message: Heap changed from ");
         Log.writeDec(oldSize.toWord().rshl(LOG_BYTES_IN_KBYTE));
         Log.write("KB to ");

@@ -54,7 +54,9 @@ public final class G1SurvivorTraceLocal extends TraceLocal {
       return G1.survivorSpace.traceObject(this, object, G1.ALLOC_MATURE);
     }
 
-    processNode(object);
+    if(!object.isNull())
+      processNode(object);
+      
     return object;
   }
 

@@ -19,6 +19,7 @@ import org.mmtk.plan.Trace;
 import org.mmtk.utility.HeaderByte;
 import org.mmtk.utility.deque.*;
 import org.mmtk.vm.VM;
+import org.mmtk.harness.vm.ObjectModel;
 
 import org.vmmagic.pragma.*;
 import org.vmmagic.unboxed.*;
@@ -54,7 +55,10 @@ public final class G1NurseryTraceLocal extends TraceLocal {
       return G1.nurserySpace.traceObject(this, object, G1.ALLOC_SURVIVOR);
     }
 
-    processNode(object);
+    int refs = ObjectModel.getRefs(object);
+    if(!object.isNull() && refs != 0)
+      processNode(object);
+
     return object;
   }
 

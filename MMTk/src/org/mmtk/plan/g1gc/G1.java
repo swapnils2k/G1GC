@@ -79,21 +79,19 @@ public class G1 extends G1Survivor {
   @Override
   @Inline
   public void collectionPhase(short phaseId) {
-    Log.write("\nCollection is invoked for G1GC");
-    if(phaseId == PREPARE) {
-        Log.write("\nnextGCNursery = ");
-        Log.write(nextGCNursery);
-        Log.write("\nnextGCSurvivor = ");
-        Log.write(nextGCSurvivor);
-        Log.write("\nnextGCFullHeap = ");
-        Log.write(nextGCFullHeap);
-        Log.write("\ngcNursery = ");
-        Log.write(gcNursery);
-        Log.write("\ngcSurvivor = ");
-        Log.write(gcSurvivor);
-        Log.write("\ngcFullHeap = ");
-        Log.write(gcFullHeap);
-    }
+    Log.write("\nnextGCNursery = ");
+    Log.write(nextGCNursery);
+    Log.write("\nnextGCSurvivor = ");
+    Log.write(nextGCSurvivor);
+    Log.write("\nnextGCFullHeap = ");
+    Log.write(nextGCFullHeap);
+    Log.write("\ngcNursery = ");
+    Log.write(gcNursery);
+    Log.write("\ngcSurvivor = ");
+    Log.write(gcSurvivor);
+    Log.write("\ngcFullHeap = ");
+    Log.write(gcFullHeap);
+    Log.write("\nProcessing phase id - " , phaseId);
 
     if(phaseId == RELEASE) {
       nextGCNursery = false;
@@ -132,7 +130,6 @@ public class G1 extends G1Survivor {
 
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
-      Log.write("\nInvoked collection required");
       if(space == toSpace() && spaceFull) {
           Log.write("\nSince space object is equal to mature toSpace, setting nextGCFullHeap as true");
           nextGCFullHeap = true;
@@ -156,11 +153,6 @@ public class G1 extends G1Survivor {
   @Inline
   public int getPagesUsed() {
     return toSpace().reservedPages() + super.getPagesUsed();
-  }
-
-  @Override
-  public final int getCollectionReserve() {
-    return toSpace().reservedPages() + super.getCollectionReserve();
   }
 
   @Override

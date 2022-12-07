@@ -40,7 +40,7 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
   @Inline
   public Address allocCopy(ObjectReference original, int bytes, int align, int offset, int allocator) {
       if (allocator == G1Survivor.ALLOC_SURVIVOR) {
-        Log.write("\nSince allocator is of type G1Survivor.ALLOC_SURVIVOR, we are allocating date to survivor space");
+        // Log.write("\nSince allocator is of type G1Survivor.ALLOC_SURVIVOR, we are allocating date to survivor space");
         return survivor.alloc(bytes, align, offset);
       }
 
@@ -78,8 +78,10 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
 
   @Override
   public TraceLocal getCurrentTrace() {
-    if(global().isCurrentGCSurvivor())
-        return survivorTrace;
+    if(global().isCurrentGCSurvivor()) {
+      Log.write("\nReturning survivor trace");
+      return survivorTrace;
+    }
 
     return super.getCurrentTrace();
   }
