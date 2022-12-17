@@ -72,26 +72,26 @@ public class G1 extends G1Survivor {
   @Override
   public void printPreStats() {
     if ((Options.verbose.getValue() >= 1) && (gcFullHeap || traceFullHeap()))
-      Log.write("[Full heap]");
+      // Log.write("[Full heap]");
     super.printPreStats();
   }
 
   @Override
   @Inline
   public void collectionPhase(short phaseId) {
-    Log.write("\nnextGCNursery = ");
-    Log.write(nextGCNursery);
-    Log.write("\nnextGCSurvivor = ");
-    Log.write(nextGCSurvivor);
-    Log.write("\nnextGCFullHeap = ");
-    Log.write(nextGCFullHeap);
-    Log.write("\ngcNursery = ");
-    Log.write(gcNursery);
-    Log.write("\ngcSurvivor = ");
-    Log.write(gcSurvivor);
-    Log.write("\ngcFullHeap = ");
-    Log.write(gcFullHeap);
-    Log.write("\nProcessing phase id - " , phaseId);
+    // Log.write("\nnextGCNursery = ");
+    // Log.write(nextGCNursery);
+    // Log.write("\nnextGCSurvivor = ");
+    // Log.write(nextGCSurvivor);
+    // Log.write("\nnextGCFullHeap = ");
+    // Log.write(nextGCFullHeap);
+    // Log.write("\ngcNursery = ");
+    // Log.write(gcNursery);
+    // Log.write("\ngcSurvivor = ");
+    // Log.write(gcSurvivor);
+    // Log.write("\ngcFullHeap = ");
+    // Log.write(gcFullHeap);
+    // Log.write("\nProcessing phase id - " , phaseId);
 
     if(phaseId == RELEASE) {
       nextGCNursery = false;
@@ -131,7 +131,7 @@ public class G1 extends G1Survivor {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
       if(space == toSpace() && spaceFull) {
-          Log.write("\nSince space object is equal to mature toSpace, setting nextGCFullHeap as true");
+          // Log.write("\nSince space object is equal to mature toSpace, setting nextGCFullHeap as true");
           nextGCFullHeap = true;
           return true;
       }

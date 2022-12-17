@@ -64,7 +64,7 @@ public abstract class G1NurseryCollector extends StopTheWorldCollector {
   @Override
   public TraceLocal getCurrentTrace() {
       if(global().isCurrentGCNursery()) {
-        Log.write("\nReturning nursery trace");
+        // Log.write("\nReturning nursery trace");
         return nurseryTrace;
       }
 

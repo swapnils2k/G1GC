@@ -102,7 +102,7 @@ public class G1Collector extends G1SurvivorCollector {
   public final TraceLocal getCurrentTrace() {
     TraceLocal currentTrace = super.getCurrentTrace();
     if(currentTrace == null) {
-      Log.write("\nReturning mature trace");
+      // Log.write("\nReturning mature trace");
       global().nextGCFullHeap = true;
       return matureTrace;
     }

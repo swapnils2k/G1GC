@@ -79,7 +79,7 @@ public abstract class G1SurvivorCollector extends G1NurseryCollector {
   @Override
   public TraceLocal getCurrentTrace() {
     if(global().isCurrentGCSurvivor()) {
-      Log.write("\nReturning survivor trace");
+      // Log.write("\nReturning survivor trace");
       return survivorTrace;
     }
 

@@ -70,7 +70,7 @@ public class G1Nursery extends StopTheWorld {
   @NoInline
   public void collectionPhase(short phaseId) {
     if (phaseId == SET_COLLECTION_KIND) {
-      Log.write("\nCollection is invoked for G1GC");
+      // Log.write("\nCollection is invoked for G1GC");
       super.collectionPhase(phaseId);
       gcNursery = nextGCNursery;
       gcSurvivor = nextGCSurvivor;
@@ -139,19 +139,19 @@ public class G1Nursery extends StopTheWorld {
   @Override
   public boolean collectionRequired(boolean spaceFull, Space space) {
     int availableNurseryPages = Options.nurserySize.getMaxNursery() - nurserySpace.reservedPages();
-    Log.write("\nMaximum nursery size - ");
-    Log.write(Options.nurserySize.getMaxNursery());
-    Log.write("\nNursery reservedPages - ");
-    Log.write(nurserySpace.reservedPages());
+    // Log.write("\nMaximum nursery size - ");
+    // Log.write(Options.nurserySize.getMaxNursery());
+    // Log.write("\nNursery reservedPages - ");
+    // Log.write(nurserySpace.reservedPages());
     
     if (availableNurseryPages <= 0) {
       nextGCNursery = true;
-      Log.write("\nSince availableNurseryPages < 0 , setting nextGCNursery as true");
+      // Log.write("\nSince availableNurseryPages < 0 , setting nextGCNursery as true");
       return true;
     }
 
     if(space == nurserySpace && spaceFull) {
-        Log.write("\nSince space object is equal to nursery space, setting nextGCNursery as true");
+        // Log.write("\nSince space object is equal to nursery space, setting nextGCNursery as true");
         nextGCNursery = true;
         return true;
     }
